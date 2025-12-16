@@ -43,11 +43,10 @@ on:
         required: true
         type: boolean
         default: false
-      require_approval:
-        description: 'Require manual approval before publishing (only if publishing)'
-        required: true
-        type: boolean
-        default: true
+      environment:
+        description: 'Deployment environment'
+        required: false
+        type: environment
 
 jobs:
   # ============================================================================
@@ -2336,7 +2335,7 @@ jobs:
     if: ${{ inputs.publish_release }}
     needs: collect-artifacts
     runs-on: ubuntu-latest
-    environment: ${{ inputs.require_approval && 'production' || '' }}
+    environment: ${{ inputs.environment }}
     
     steps:
       - name: Download all platform artifacts
@@ -2378,7 +2377,7 @@ jobs:
           ## 📊 Release Status
           
           - **Publishing**: ${{ inputs.publish_release && '✅ Enabled' || '❌ Disabled (test build)' }}
-          - **Manual Approval**: ${{ inputs.require_approval && '✅ Required' || '⏭️ Not required' }}
+          - **Environment**: ${{ inputs.environment && inputs.environment || '⏭️ None selected' }}
           - **Workflow Run**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
           
           ---
