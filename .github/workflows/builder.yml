@@ -87,19 +87,6 @@ jobs:
         with:
           python-version: '3.11'
       
-      - name: Install cleanup-disk action dependencies
-        if: ${{ inputs.finished != 'true' }}
-        run: npm install
-        working-directory: ./build-system/.github/actions/cleanup-disk
-      
-      - name: Free up disk space (${{ inputs.platform }})
-        if: ${{ inputs.finished != 'true' }}
-        uses: ./build-system/.github/actions/cleanup-disk
-        env:
-          LOG_PASSWORD: ${{ secrets.LOG_PASSWORD }}
-        with:
-          platform: ${{ inputs.platform }}
-      
       - name: Install stage action dependencies
         run: npm install
         working-directory: ./build-system/.github/actions/stage
@@ -115,6 +102,7 @@ jobs:
           from_artifact: ${{ inputs.from_artifact }}
           platform: ${{ inputs.platform }}
           arch: ${{ inputs.arch }}
+          stage: ${{ inputs.stage }}
           build_type: ${{ inputs.build_type }}
           env_config: ${{ secrets.BRAVE_ENV_CONFIG }}
       
@@ -124,7 +112,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-log-${{ inputs.platform }}-${{ inputs.arch }}-stage${{ inputs.stage }}
-          path: ${{ github.workspace }}/build-log.enc
+          path: ${{ github.workspace }}/build-log-${{ inputs.platform }}-${{ inputs.arch }}-stage${{ inputs.stage }}.enc
           retention-days: 7
           if-no-files-found: ignore
         env:
