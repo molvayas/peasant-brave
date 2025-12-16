@@ -2369,11 +2369,11 @@ jobs:
           | 🪟 Windows x64 | ${{ inputs.build_windows_x64 && '✅ Built' || '⏭️ Skipped' }} | ${{ inputs.build_type }} |
           | 🪟 Windows arm64 | ${{ inputs.build_windows_arm64 && '✅ Built' || '⏭️ Skipped' }} | ${{ inputs.build_type }} |
           | 🪟 Windows x86 | ${{ inputs.build_windows_x86 && '✅ Built' || '⏭️ Skipped' }} | ${{ inputs.build_type }} |
+            
+          ## 🔐 Security & Verification
           
-        ## 🔐 Security & Verification
-        
-        - **Checksums**: SHA256 generated for all artifacts
-        - **Release Type**: Pre-release (custom rebuild)
+          - **Checksums**: SHA256 generated for all artifacts
+          - **Release Type**: Pre-release (custom rebuild)
           
           ## 📊 Release Status
           
