@@ -38,14 +38,6 @@ on:
         required: true
         type: boolean
         default: false
-      build_type:
-        description: 'Build type: Component or Release'
-        required: true
-        type: choice
-        options:
-          - Component
-          - Release
-        default: Component
       publish_release:
         description: 'Publish GitHub release (uncheck for test builds)'
         required: true
@@ -72,7 +64,7 @@ jobs:
       stage: 1
       from_artifact: false
       finished: 'false'
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -91,7 +83,7 @@ jobs:
       stage: 2
       from_artifact: true
       finished: ${{ needs.linux-x64-build-1.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -110,7 +102,7 @@ jobs:
       stage: 3
       from_artifact: true
       finished: ${{ needs.linux-x64-build-2.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -129,7 +121,7 @@ jobs:
       stage: 4
       from_artifact: true
       finished: ${{ needs.linux-x64-build-3.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -148,7 +140,7 @@ jobs:
       stage: 5
       from_artifact: true
       finished: ${{ needs.linux-x64-build-4.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -167,7 +159,7 @@ jobs:
       stage: 6
       from_artifact: true
       finished: ${{ needs.linux-x64-build-5.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -186,7 +178,7 @@ jobs:
       stage: 7
       from_artifact: true
       finished: ${{ needs.linux-x64-build-6.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -205,7 +197,7 @@ jobs:
       stage: 8
       from_artifact: true
       finished: ${{ needs.linux-x64-build-7.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -224,7 +216,7 @@ jobs:
       stage: 9
       from_artifact: true
       finished: ${{ needs.linux-x64-build-8.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -243,7 +235,7 @@ jobs:
       stage: 10
       from_artifact: true
       finished: ${{ needs.linux-x64-build-9.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -262,7 +254,7 @@ jobs:
       stage: 11
       from_artifact: true
       finished: ${{ needs.linux-x64-build-10.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -281,7 +273,7 @@ jobs:
       stage: 12
       from_artifact: true
       finished: ${{ needs.linux-x64-build-11.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -300,7 +292,7 @@ jobs:
       stage: 13
       from_artifact: true
       finished: ${{ needs.linux-x64-build-12.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -319,7 +311,7 @@ jobs:
       stage: 14
       from_artifact: true
       finished: ${{ needs.linux-x64-build-13.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -338,7 +330,7 @@ jobs:
       stage: 15
       from_artifact: true
       finished: ${{ needs.linux-x64-build-14.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -357,7 +349,7 @@ jobs:
       stage: 16
       from_artifact: true
       finished: ${{ needs.linux-x64-build-15.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -379,7 +371,7 @@ jobs:
       stage: 1
       from_artifact: false
       finished: 'false'
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -398,7 +390,7 @@ jobs:
       stage: 2
       from_artifact: true
       finished: ${{ needs.windows-x64-build-1.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -417,7 +409,7 @@ jobs:
       stage: 3
       from_artifact: true
       finished: ${{ needs.windows-x64-build-2.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -436,7 +428,7 @@ jobs:
       stage: 4
       from_artifact: true
       finished: ${{ needs.windows-x64-build-3.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -455,7 +447,7 @@ jobs:
       stage: 5
       from_artifact: true
       finished: ${{ needs.windows-x64-build-4.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -474,7 +466,7 @@ jobs:
       stage: 6
       from_artifact: true
       finished: ${{ needs.windows-x64-build-5.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -493,7 +485,7 @@ jobs:
       stage: 7
       from_artifact: true
       finished: ${{ needs.windows-x64-build-6.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -512,7 +504,7 @@ jobs:
       stage: 8
       from_artifact: true
       finished: ${{ needs.windows-x64-build-7.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -531,7 +523,7 @@ jobs:
       stage: 9
       from_artifact: true
       finished: ${{ needs.windows-x64-build-8.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -550,7 +542,7 @@ jobs:
       stage: 10
       from_artifact: true
       finished: ${{ needs.windows-x64-build-9.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -569,7 +561,7 @@ jobs:
       stage: 11
       from_artifact: true
       finished: ${{ needs.windows-x64-build-10.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -588,7 +580,7 @@ jobs:
       stage: 12
       from_artifact: true
       finished: ${{ needs.windows-x64-build-11.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -607,7 +599,7 @@ jobs:
       stage: 13
       from_artifact: true
       finished: ${{ needs.windows-x64-build-12.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -626,7 +618,7 @@ jobs:
       stage: 14
       from_artifact: true
       finished: ${{ needs.windows-x64-build-13.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -645,7 +637,7 @@ jobs:
       stage: 15
       from_artifact: true
       finished: ${{ needs.windows-x64-build-14.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -664,7 +656,7 @@ jobs:
       stage: 16
       from_artifact: true
       finished: ${{ needs.windows-x64-build-15.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -686,7 +678,7 @@ jobs:
       stage: 1
       from_artifact: false
       finished: 'false'
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -705,7 +697,7 @@ jobs:
       stage: 2
       from_artifact: true
       finished: ${{ needs.windows-arm64-build-1.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -724,7 +716,7 @@ jobs:
       stage: 3
       from_artifact: true
       finished: ${{ needs.windows-arm64-build-2.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -743,7 +735,7 @@ jobs:
       stage: 4
       from_artifact: true
       finished: ${{ needs.windows-arm64-build-3.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -762,7 +754,7 @@ jobs:
       stage: 5
       from_artifact: true
       finished: ${{ needs.windows-arm64-build-4.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -781,7 +773,7 @@ jobs:
       stage: 6
       from_artifact: true
       finished: ${{ needs.windows-arm64-build-5.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -800,7 +792,7 @@ jobs:
       stage: 7
       from_artifact: true
       finished: ${{ needs.windows-arm64-build-6.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -819,7 +811,7 @@ jobs:
       stage: 8
       from_artifact: true
       finished: ${{ needs.windows-arm64-build-7.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -838,7 +830,7 @@ jobs:
       stage: 9
       from_artifact: true
       finished: ${{ needs.windows-arm64-build-8.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -857,7 +849,7 @@ jobs:
       stage: 10
       from_artifact: true
       finished: ${{ needs.windows-arm64-build-9.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -876,7 +868,7 @@ jobs:
       stage: 11
       from_artifact: true
       finished: ${{ needs.windows-arm64-build-10.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -895,7 +887,7 @@ jobs:
       stage: 12
       from_artifact: true
       finished: ${{ needs.windows-arm64-build-11.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -914,7 +906,7 @@ jobs:
       stage: 13
       from_artifact: true
       finished: ${{ needs.windows-arm64-build-12.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -933,7 +925,7 @@ jobs:
       stage: 14
       from_artifact: true
       finished: ${{ needs.windows-arm64-build-13.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -952,7 +944,7 @@ jobs:
       stage: 15
       from_artifact: true
       finished: ${{ needs.windows-arm64-build-14.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -971,7 +963,7 @@ jobs:
       stage: 16
       from_artifact: true
       finished: ${{ needs.windows-arm64-build-15.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -993,7 +985,7 @@ jobs:
       stage: 1
       from_artifact: false
       finished: 'false'
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1012,7 +1004,7 @@ jobs:
       stage: 2
       from_artifact: true
       finished: ${{ needs.windows-x86-build-1.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1031,7 +1023,7 @@ jobs:
       stage: 3
       from_artifact: true
       finished: ${{ needs.windows-x86-build-2.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1050,7 +1042,7 @@ jobs:
       stage: 4
       from_artifact: true
       finished: ${{ needs.windows-x86-build-3.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1069,7 +1061,7 @@ jobs:
       stage: 5
       from_artifact: true
       finished: ${{ needs.windows-x86-build-4.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1088,7 +1080,7 @@ jobs:
       stage: 6
       from_artifact: true
       finished: ${{ needs.windows-x86-build-5.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1107,7 +1099,7 @@ jobs:
       stage: 7
       from_artifact: true
       finished: ${{ needs.windows-x86-build-6.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1126,7 +1118,7 @@ jobs:
       stage: 8
       from_artifact: true
       finished: ${{ needs.windows-x86-build-7.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1145,7 +1137,7 @@ jobs:
       stage: 9
       from_artifact: true
       finished: ${{ needs.windows-x86-build-8.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1164,7 +1156,7 @@ jobs:
       stage: 10
       from_artifact: true
       finished: ${{ needs.windows-x86-build-9.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1183,7 +1175,7 @@ jobs:
       stage: 11
       from_artifact: true
       finished: ${{ needs.windows-x86-build-10.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1202,7 +1194,7 @@ jobs:
       stage: 12
       from_artifact: true
       finished: ${{ needs.windows-x86-build-11.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1221,7 +1213,7 @@ jobs:
       stage: 13
       from_artifact: true
       finished: ${{ needs.windows-x86-build-12.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1240,7 +1232,7 @@ jobs:
       stage: 14
       from_artifact: true
       finished: ${{ needs.windows-x86-build-13.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1259,7 +1251,7 @@ jobs:
       stage: 15
       from_artifact: true
       finished: ${{ needs.windows-x86-build-14.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1278,7 +1270,7 @@ jobs:
       stage: 16
       from_artifact: true
       finished: ${{ needs.windows-x86-build-15.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1300,7 +1292,7 @@ jobs:
       stage: 1
       from_artifact: false
       finished: 'false'
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1319,7 +1311,7 @@ jobs:
       stage: 2
       from_artifact: true
       finished: ${{ needs.macos-x64-build-1.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1338,7 +1330,7 @@ jobs:
       stage: 3
       from_artifact: true
       finished: ${{ needs.macos-x64-build-2.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1357,7 +1349,7 @@ jobs:
       stage: 4
       from_artifact: true
       finished: ${{ needs.macos-x64-build-3.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1376,7 +1368,7 @@ jobs:
       stage: 5
       from_artifact: true
       finished: ${{ needs.macos-x64-build-4.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1395,7 +1387,7 @@ jobs:
       stage: 6
       from_artifact: true
       finished: ${{ needs.macos-x64-build-5.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1414,7 +1406,7 @@ jobs:
       stage: 7
       from_artifact: true
       finished: ${{ needs.macos-x64-build-6.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1433,7 +1425,7 @@ jobs:
       stage: 8
       from_artifact: true
       finished: ${{ needs.macos-x64-build-7.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1452,7 +1444,7 @@ jobs:
       stage: 9
       from_artifact: true
       finished: ${{ needs.macos-x64-build-8.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1471,7 +1463,7 @@ jobs:
       stage: 10
       from_artifact: true
       finished: ${{ needs.macos-x64-build-9.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1490,7 +1482,7 @@ jobs:
       stage: 11
       from_artifact: true
       finished: ${{ needs.macos-x64-build-10.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1509,7 +1501,7 @@ jobs:
       stage: 12
       from_artifact: true
       finished: ${{ needs.macos-x64-build-11.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1528,7 +1520,7 @@ jobs:
       stage: 13
       from_artifact: true
       finished: ${{ needs.macos-x64-build-12.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1547,7 +1539,7 @@ jobs:
       stage: 14
       from_artifact: true
       finished: ${{ needs.macos-x64-build-13.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1566,7 +1558,7 @@ jobs:
       stage: 15
       from_artifact: true
       finished: ${{ needs.macos-x64-build-14.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1585,7 +1577,7 @@ jobs:
       stage: 16
       from_artifact: true
       finished: ${{ needs.macos-x64-build-15.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1607,7 +1599,7 @@ jobs:
       stage: 1
       from_artifact: false
       finished: 'false'
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1626,7 +1618,7 @@ jobs:
       stage: 2
       from_artifact: true
       finished: ${{ needs.macos-arm64-build-1.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1645,7 +1637,7 @@ jobs:
       stage: 3
       from_artifact: true
       finished: ${{ needs.macos-arm64-build-2.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1664,7 +1656,7 @@ jobs:
       stage: 4
       from_artifact: true
       finished: ${{ needs.macos-arm64-build-3.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1683,7 +1675,7 @@ jobs:
       stage: 5
       from_artifact: true
       finished: ${{ needs.macos-arm64-build-4.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1702,7 +1694,7 @@ jobs:
       stage: 6
       from_artifact: true
       finished: ${{ needs.macos-arm64-build-5.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1721,7 +1713,7 @@ jobs:
       stage: 7
       from_artifact: true
       finished: ${{ needs.macos-arm64-build-6.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1740,7 +1732,7 @@ jobs:
       stage: 8
       from_artifact: true
       finished: ${{ needs.macos-arm64-build-7.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1759,7 +1751,7 @@ jobs:
       stage: 9
       from_artifact: true
       finished: ${{ needs.macos-arm64-build-8.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1778,7 +1770,7 @@ jobs:
       stage: 10
       from_artifact: true
       finished: ${{ needs.macos-arm64-build-9.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1797,7 +1789,7 @@ jobs:
       stage: 11
       from_artifact: true
       finished: ${{ needs.macos-arm64-build-10.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1816,7 +1808,7 @@ jobs:
       stage: 12
       from_artifact: true
       finished: ${{ needs.macos-arm64-build-11.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1835,7 +1827,7 @@ jobs:
       stage: 13
       from_artifact: true
       finished: ${{ needs.macos-arm64-build-12.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1854,7 +1846,7 @@ jobs:
       stage: 14
       from_artifact: true
       finished: ${{ needs.macos-arm64-build-13.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1873,7 +1865,7 @@ jobs:
       stage: 15
       from_artifact: true
       finished: ${{ needs.macos-arm64-build-14.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1892,7 +1884,7 @@ jobs:
       stage: 16
       from_artifact: true
       finished: ${{ needs.macos-arm64-build-15.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1914,7 +1906,7 @@ jobs:
       stage: 1
       from_artifact: false
       finished: 'false'
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1933,7 +1925,7 @@ jobs:
       stage: 2
       from_artifact: true
       finished: ${{ needs.linux-arm64-build-1.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1952,7 +1944,7 @@ jobs:
       stage: 3
       from_artifact: true
       finished: ${{ needs.linux-arm64-build-2.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1971,7 +1963,7 @@ jobs:
       stage: 4
       from_artifact: true
       finished: ${{ needs.linux-arm64-build-3.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -1990,7 +1982,7 @@ jobs:
       stage: 5
       from_artifact: true
       finished: ${{ needs.linux-arm64-build-4.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -2009,7 +2001,7 @@ jobs:
       stage: 6
       from_artifact: true
       finished: ${{ needs.linux-arm64-build-5.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -2028,7 +2020,7 @@ jobs:
       stage: 7
       from_artifact: true
       finished: ${{ needs.linux-arm64-build-6.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -2047,7 +2039,7 @@ jobs:
       stage: 8
       from_artifact: true
       finished: ${{ needs.linux-arm64-build-7.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -2066,7 +2058,7 @@ jobs:
       stage: 9
       from_artifact: true
       finished: ${{ needs.linux-arm64-build-8.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -2085,7 +2077,7 @@ jobs:
       stage: 10
       from_artifact: true
       finished: ${{ needs.linux-arm64-build-9.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -2104,7 +2096,7 @@ jobs:
       stage: 11
       from_artifact: true
       finished: ${{ needs.linux-arm64-build-10.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -2123,7 +2115,7 @@ jobs:
       stage: 12
       from_artifact: true
       finished: ${{ needs.linux-arm64-build-11.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -2142,7 +2134,7 @@ jobs:
       stage: 13
       from_artifact: true
       finished: ${{ needs.linux-arm64-build-12.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -2161,7 +2153,7 @@ jobs:
       stage: 14
       from_artifact: true
       finished: ${{ needs.linux-arm64-build-13.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -2180,7 +2172,7 @@ jobs:
       stage: 15
       from_artifact: true
       finished: ${{ needs.linux-arm64-build-14.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
@@ -2199,7 +2191,7 @@ jobs:
       stage: 16
       from_artifact: true
       finished: ${{ needs.linux-arm64-build-15.outputs.finished }}
-      build_type: ${{ inputs.build_type }}
+      build_type: Release
       run_id: ${{ github.run_id }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}

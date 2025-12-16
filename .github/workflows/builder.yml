@@ -24,10 +24,10 @@ on:
         required: true
         type: string
       build_type:
-        description: 'Build type: Component (dev/debug) or Release (official)'
+        description: 'Build type (always Release)'
         required: false
         type: string
-        default: 'Component'
+        default: 'Release'
       run_id:
         description: 'Workflow run ID for unique log naming'
         required: true
@@ -92,8 +92,9 @@ jobs:
           token: ${{ secrets.PRIVATE_REPO_PAT }}
           path: build-system
       
-      # Checkout patch repositories with version tags
+      # Checkout patch repositories (only needed for init stage, not when resuming)
       - name: Checkout public patches (MPL)
+        if: ${{ !inputs.from_artifact }}
         uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/peasant-patches-mpl
@@ -101,6 +102,7 @@ jobs:
           path: patches-public
       
       - name: Checkout private patches
+        if: ${{ !inputs.from_artifact }}
         uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/peasant-patches-private
