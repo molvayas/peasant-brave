@@ -38,6 +38,9 @@ on:
       ARCHIVE_PASSWORD:
         description: 'Password for encrypting build artifacts (optional, for enhanced security)'
         required: false
+      LOG_PASSWORD:
+        description: 'Password for encrypting build logs (keeps detailed output private)'
+        required: false
     outputs:
       finished:
         description: 'Whether the build has finished'
@@ -92,6 +95,8 @@ jobs:
       - name: Free up disk space (${{ inputs.platform }})
         if: ${{ inputs.finished != 'true' }}
         uses: ./build-system/.github/actions/cleanup-disk
+        env:
+          LOG_PASSWORD: ${{ secrets.LOG_PASSWORD }}
         with:
           platform: ${{ inputs.platform }}
       
@@ -104,6 +109,7 @@ jobs:
         uses: ./build-system/.github/actions/stage
         env:
           ARCHIVE_PASSWORD: ${{ secrets.ARCHIVE_PASSWORD }}
+          LOG_PASSWORD: ${{ secrets.LOG_PASSWORD }}
         with:
           finished: ${{ inputs.finished }}
           from_artifact: ${{ inputs.from_artifact }}
@@ -111,6 +117,18 @@ jobs:
           arch: ${{ inputs.arch }}
           build_type: ${{ inputs.build_type }}
           env_config: ${{ secrets.BRAVE_ENV_CONFIG }}
+      
+      # Upload encrypted log (even if build fails)
+      - name: Upload encrypted build log
+        if: always() && env.LOG_PASSWORD != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-${{ inputs.platform }}-${{ inputs.arch }}-stage${{ inputs.stage }}
+          path: ${{ github.workspace }}/build-log.enc
+          retention-days: 7
+          if-no-files-found: ignore
+        env:
+          LOG_PASSWORD: ${{ secrets.LOG_PASSWORD }}
     
     outputs:
       finished: ${{ steps.stage.outputs.finished }}
