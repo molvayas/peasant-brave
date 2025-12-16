@@ -57,7 +57,7 @@ on:
 
 jobs:
   build:
-    uses: molvayas/peasant-build-system/.github/workflows/build-16stage.yml@main
+    uses: molvayas/peasant-build-system/.github/workflows/build-16stage.yml
     with:
       build_linux_x64: ${{ inputs.build_linux_x64 }}
       build_linux_arm64: ${{ inputs.build_linux_arm64 }}
