@@ -167,9 +167,9 @@ jobs:
     name: Linux x64 - Stage 1/16
     needs: validate-config
     if: ${{ inputs.build_linux_x64 }}
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 1
@@ -187,9 +187,9 @@ jobs:
     name: Linux x64 - Stage 2/16
     if: ${{ inputs.build_linux_x64 }}
     needs: linux-x64-build-1
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 2
@@ -207,9 +207,9 @@ jobs:
     name: Linux x64 - Stage 3/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-2.outputs.finished != 'true' }}
     needs: linux-x64-build-2
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 3
@@ -227,9 +227,9 @@ jobs:
     name: Linux x64 - Stage 4/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-3.outputs.finished != 'true' }}
     needs: linux-x64-build-3
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 4
@@ -247,9 +247,9 @@ jobs:
     name: Linux x64 - Stage 5/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-4.outputs.finished != 'true' }}
     needs: linux-x64-build-4
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 5
@@ -267,9 +267,9 @@ jobs:
     name: Linux x64 - Stage 6/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-5.outputs.finished != 'true' }}
     needs: linux-x64-build-5
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 6
@@ -287,9 +287,9 @@ jobs:
     name: Linux x64 - Stage 7/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-6.outputs.finished != 'true' }}
     needs: linux-x64-build-6
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 7
@@ -307,9 +307,9 @@ jobs:
     name: Linux x64 - Stage 8/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-7.outputs.finished != 'true' }}
     needs: linux-x64-build-7
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 8
@@ -327,9 +327,9 @@ jobs:
     name: Linux x64 - Stage 9/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-8.outputs.finished != 'true' }}
     needs: linux-x64-build-8
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 9
@@ -347,9 +347,9 @@ jobs:
     name: Linux x64 - Stage 10/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-9.outputs.finished != 'true' }}
     needs: linux-x64-build-9
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 10
@@ -367,9 +367,9 @@ jobs:
     name: Linux x64 - Stage 11/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-10.outputs.finished != 'true' }}
     needs: linux-x64-build-10
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 11
@@ -387,9 +387,9 @@ jobs:
     name: Linux x64 - Stage 12/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-11.outputs.finished != 'true' }}
     needs: linux-x64-build-11
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 12
@@ -407,9 +407,9 @@ jobs:
     name: Linux x64 - Stage 13/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-12.outputs.finished != 'true' }}
     needs: linux-x64-build-12
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 13
@@ -427,9 +427,9 @@ jobs:
     name: Linux x64 - Stage 14/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-13.outputs.finished != 'true' }}
     needs: linux-x64-build-13
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 14
@@ -447,9 +447,9 @@ jobs:
     name: Linux x64 - Stage 15/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-14.outputs.finished != 'true' }}
     needs: linux-x64-build-14
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 15
@@ -467,9 +467,9 @@ jobs:
     name: Linux x64 - Stage 16/16 (Final)
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-15.outputs.finished != 'true' }}
     needs: linux-x64-build-15
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 16
@@ -491,9 +491,9 @@ jobs:
     name: Windows x64 - Stage 1/16
     needs: validate-config
     if: ${{ inputs.build_windows_x64 }}
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 1
@@ -511,9 +511,9 @@ jobs:
     name: Windows x64 - Stage 2/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-1.outputs.finished != 'true' }}
     needs: windows-x64-build-1
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 2
@@ -531,9 +531,9 @@ jobs:
     name: Windows x64 - Stage 3/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-2.outputs.finished != 'true' }}
     needs: windows-x64-build-2
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 3
@@ -551,9 +551,9 @@ jobs:
     name: Windows x64 - Stage 4/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-3.outputs.finished != 'true' }}
     needs: windows-x64-build-3
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 4
@@ -571,9 +571,9 @@ jobs:
     name: Windows x64 - Stage 5/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-4.outputs.finished != 'true' }}
     needs: windows-x64-build-4
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 5
@@ -591,9 +591,9 @@ jobs:
     name: Windows x64 - Stage 6/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-5.outputs.finished != 'true' }}
     needs: windows-x64-build-5
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 6
@@ -611,9 +611,9 @@ jobs:
     name: Windows x64 - Stage 7/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-6.outputs.finished != 'true' }}
     needs: windows-x64-build-6
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 7
@@ -631,9 +631,9 @@ jobs:
     name: Windows x64 - Stage 8/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-7.outputs.finished != 'true' }}
     needs: windows-x64-build-7
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 8
@@ -651,9 +651,9 @@ jobs:
     name: Windows x64 - Stage 9/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-8.outputs.finished != 'true' }}
     needs: windows-x64-build-8
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 9
@@ -671,9 +671,9 @@ jobs:
     name: Windows x64 - Stage 10/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-9.outputs.finished != 'true' }}
     needs: windows-x64-build-9
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 10
@@ -691,9 +691,9 @@ jobs:
     name: Windows x64 - Stage 11/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-10.outputs.finished != 'true' }}
     needs: windows-x64-build-10
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 11
@@ -711,9 +711,9 @@ jobs:
     name: Windows x64 - Stage 12/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-11.outputs.finished != 'true' }}
     needs: windows-x64-build-11
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 12
@@ -731,9 +731,9 @@ jobs:
     name: Windows x64 - Stage 13/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-12.outputs.finished != 'true' }}
     needs: windows-x64-build-12
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 13
@@ -751,9 +751,9 @@ jobs:
     name: Windows x64 - Stage 14/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-13.outputs.finished != 'true' }}
     needs: windows-x64-build-13
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 14
@@ -771,9 +771,9 @@ jobs:
     name: Windows x64 - Stage 15/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-14.outputs.finished != 'true' }}
     needs: windows-x64-build-14
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 15
@@ -791,9 +791,9 @@ jobs:
     name: Windows x64 - Stage 16/16 (Final)
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-15.outputs.finished != 'true' }}
     needs: windows-x64-build-15
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 16
@@ -815,9 +815,9 @@ jobs:
     name: Windows arm64 - Stage 1/16
     needs: validate-config
     if: ${{ inputs.build_windows_arm64 }}
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 1
@@ -835,9 +835,9 @@ jobs:
     name: Windows arm64 - Stage 2/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-1.outputs.finished != 'true' }}
     needs: windows-arm64-build-1
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 2
@@ -855,9 +855,9 @@ jobs:
     name: Windows arm64 - Stage 3/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-2.outputs.finished != 'true' }}
     needs: windows-arm64-build-2
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 3
@@ -875,9 +875,9 @@ jobs:
     name: Windows arm64 - Stage 4/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-3.outputs.finished != 'true' }}
     needs: windows-arm64-build-3
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 4
@@ -895,9 +895,9 @@ jobs:
     name: Windows arm64 - Stage 5/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-4.outputs.finished != 'true' }}
     needs: windows-arm64-build-4
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 5
@@ -915,9 +915,9 @@ jobs:
     name: Windows arm64 - Stage 6/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-5.outputs.finished != 'true' }}
     needs: windows-arm64-build-5
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 6
@@ -935,9 +935,9 @@ jobs:
     name: Windows arm64 - Stage 7/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-6.outputs.finished != 'true' }}
     needs: windows-arm64-build-6
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 7
@@ -955,9 +955,9 @@ jobs:
     name: Windows arm64 - Stage 8/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-7.outputs.finished != 'true' }}
     needs: windows-arm64-build-7
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 8
@@ -975,9 +975,9 @@ jobs:
     name: Windows arm64 - Stage 9/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-8.outputs.finished != 'true' }}
     needs: windows-arm64-build-8
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 9
@@ -995,9 +995,9 @@ jobs:
     name: Windows arm64 - Stage 10/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-9.outputs.finished != 'true' }}
     needs: windows-arm64-build-9
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 10
@@ -1015,9 +1015,9 @@ jobs:
     name: Windows arm64 - Stage 11/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-10.outputs.finished != 'true' }}
     needs: windows-arm64-build-10
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 11
@@ -1035,9 +1035,9 @@ jobs:
     name: Windows arm64 - Stage 12/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-11.outputs.finished != 'true' }}
     needs: windows-arm64-build-11
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 12
@@ -1055,9 +1055,9 @@ jobs:
     name: Windows arm64 - Stage 13/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-12.outputs.finished != 'true' }}
     needs: windows-arm64-build-12
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 13
@@ -1075,9 +1075,9 @@ jobs:
     name: Windows arm64 - Stage 14/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-13.outputs.finished != 'true' }}
     needs: windows-arm64-build-13
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 14
@@ -1095,9 +1095,9 @@ jobs:
     name: Windows arm64 - Stage 15/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-14.outputs.finished != 'true' }}
     needs: windows-arm64-build-14
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 15
@@ -1115,9 +1115,9 @@ jobs:
     name: Windows arm64 - Stage 16/16 (Final)
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-15.outputs.finished != 'true' }}
     needs: windows-arm64-build-15
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 16
@@ -1139,9 +1139,9 @@ jobs:
     name: Windows x86 - Stage 1/16
     needs: validate-config
     if: ${{ inputs.build_windows_x86 }}
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 1
@@ -1159,9 +1159,9 @@ jobs:
     name: Windows x86 - Stage 2/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-1.outputs.finished != 'true' }}
     needs: windows-x86-build-1
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 2
@@ -1179,9 +1179,9 @@ jobs:
     name: Windows x86 - Stage 3/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-2.outputs.finished != 'true' }}
     needs: windows-x86-build-2
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 3
@@ -1199,9 +1199,9 @@ jobs:
     name: Windows x86 - Stage 4/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-3.outputs.finished != 'true' }}
     needs: windows-x86-build-3
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 4
@@ -1219,9 +1219,9 @@ jobs:
     name: Windows x86 - Stage 5/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-4.outputs.finished != 'true' }}
     needs: windows-x86-build-4
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 5
@@ -1239,9 +1239,9 @@ jobs:
     name: Windows x86 - Stage 6/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-5.outputs.finished != 'true' }}
     needs: windows-x86-build-5
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 6
@@ -1259,9 +1259,9 @@ jobs:
     name: Windows x86 - Stage 7/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-6.outputs.finished != 'true' }}
     needs: windows-x86-build-6
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 7
@@ -1279,9 +1279,9 @@ jobs:
     name: Windows x86 - Stage 8/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-7.outputs.finished != 'true' }}
     needs: windows-x86-build-7
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 8
@@ -1299,9 +1299,9 @@ jobs:
     name: Windows x86 - Stage 9/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-8.outputs.finished != 'true' }}
     needs: windows-x86-build-8
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 9
@@ -1319,9 +1319,9 @@ jobs:
     name: Windows x86 - Stage 10/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-9.outputs.finished != 'true' }}
     needs: windows-x86-build-9
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 10
@@ -1339,9 +1339,9 @@ jobs:
     name: Windows x86 - Stage 11/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-10.outputs.finished != 'true' }}
     needs: windows-x86-build-10
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 11
@@ -1359,9 +1359,9 @@ jobs:
     name: Windows x86 - Stage 12/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-11.outputs.finished != 'true' }}
     needs: windows-x86-build-11
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 12
@@ -1379,9 +1379,9 @@ jobs:
     name: Windows x86 - Stage 13/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-12.outputs.finished != 'true' }}
     needs: windows-x86-build-12
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 13
@@ -1399,9 +1399,9 @@ jobs:
     name: Windows x86 - Stage 14/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-13.outputs.finished != 'true' }}
     needs: windows-x86-build-13
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 14
@@ -1419,9 +1419,9 @@ jobs:
     name: Windows x86 - Stage 15/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-14.outputs.finished != 'true' }}
     needs: windows-x86-build-14
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 15
@@ -1439,9 +1439,9 @@ jobs:
     name: Windows x86 - Stage 16/16 (Final)
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-15.outputs.finished != 'true' }}
     needs: windows-x86-build-15
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 16
@@ -1463,9 +1463,9 @@ jobs:
     name: macOS x64 - Stage 1/16
     needs: validate-config
     if: ${{ inputs.build_macos_x64 }}
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 1
@@ -1483,9 +1483,9 @@ jobs:
     name: macOS x64 - Stage 2/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-1.outputs.finished != 'true' }}
     needs: macos-x64-build-1
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 2
@@ -1503,9 +1503,9 @@ jobs:
     name: macOS x64 - Stage 3/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-2.outputs.finished != 'true' }}
     needs: macos-x64-build-2
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 3
@@ -1523,9 +1523,9 @@ jobs:
     name: macOS x64 - Stage 4/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-3.outputs.finished != 'true' }}
     needs: macos-x64-build-3
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 4
@@ -1543,9 +1543,9 @@ jobs:
     name: macOS x64 - Stage 5/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-4.outputs.finished != 'true' }}
     needs: macos-x64-build-4
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 5
@@ -1563,9 +1563,9 @@ jobs:
     name: macOS x64 - Stage 6/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-5.outputs.finished != 'true' }}
     needs: macos-x64-build-5
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 6
@@ -1583,9 +1583,9 @@ jobs:
     name: macOS x64 - Stage 7/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-6.outputs.finished != 'true' }}
     needs: macos-x64-build-6
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 7
@@ -1603,9 +1603,9 @@ jobs:
     name: macOS x64 - Stage 8/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-7.outputs.finished != 'true' }}
     needs: macos-x64-build-7
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 8
@@ -1623,9 +1623,9 @@ jobs:
     name: macOS x64 - Stage 9/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-8.outputs.finished != 'true' }}
     needs: macos-x64-build-8
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 9
@@ -1643,9 +1643,9 @@ jobs:
     name: macOS x64 - Stage 10/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-9.outputs.finished != 'true' }}
     needs: macos-x64-build-9
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 10
@@ -1663,9 +1663,9 @@ jobs:
     name: macOS x64 - Stage 11/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-10.outputs.finished != 'true' }}
     needs: macos-x64-build-10
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 11
@@ -1683,9 +1683,9 @@ jobs:
     name: macOS x64 - Stage 12/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-11.outputs.finished != 'true' }}
     needs: macos-x64-build-11
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 12
@@ -1703,9 +1703,9 @@ jobs:
     name: macOS x64 - Stage 13/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-12.outputs.finished != 'true' }}
     needs: macos-x64-build-12
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 13
@@ -1723,9 +1723,9 @@ jobs:
     name: macOS x64 - Stage 14/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-13.outputs.finished != 'true' }}
     needs: macos-x64-build-13
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 14
@@ -1743,9 +1743,9 @@ jobs:
     name: macOS x64 - Stage 15/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-14.outputs.finished != 'true' }}
     needs: macos-x64-build-14
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 15
@@ -1763,9 +1763,9 @@ jobs:
     name: macOS x64 - Stage 16/16 (Final)
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-15.outputs.finished != 'true' }}
     needs: macos-x64-build-15
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 16
@@ -1787,9 +1787,9 @@ jobs:
     name: macOS arm64 - Stage 1/16
     needs: validate-config
     if: ${{ inputs.build_macos_arm64 }}
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 1
@@ -1807,9 +1807,9 @@ jobs:
     name: macOS arm64 - Stage 2/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-1.outputs.finished != 'true' }}
     needs: macos-arm64-build-1
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 2
@@ -1827,9 +1827,9 @@ jobs:
     name: macOS arm64 - Stage 3/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-2.outputs.finished != 'true' }}
     needs: macos-arm64-build-2
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 3
@@ -1847,9 +1847,9 @@ jobs:
     name: macOS arm64 - Stage 4/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-3.outputs.finished != 'true' }}
     needs: macos-arm64-build-3
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 4
@@ -1867,9 +1867,9 @@ jobs:
     name: macOS arm64 - Stage 5/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-4.outputs.finished != 'true' }}
     needs: macos-arm64-build-4
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 5
@@ -1887,9 +1887,9 @@ jobs:
     name: macOS arm64 - Stage 6/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-5.outputs.finished != 'true' }}
     needs: macos-arm64-build-5
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 6
@@ -1907,9 +1907,9 @@ jobs:
     name: macOS arm64 - Stage 7/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-6.outputs.finished != 'true' }}
     needs: macos-arm64-build-6
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 7
@@ -1927,9 +1927,9 @@ jobs:
     name: macOS arm64 - Stage 8/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-7.outputs.finished != 'true' }}
     needs: macos-arm64-build-7
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 8
@@ -1947,9 +1947,9 @@ jobs:
     name: macOS arm64 - Stage 9/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-8.outputs.finished != 'true' }}
     needs: macos-arm64-build-8
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 9
@@ -1967,9 +1967,9 @@ jobs:
     name: macOS arm64 - Stage 10/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-9.outputs.finished != 'true' }}
     needs: macos-arm64-build-9
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 10
@@ -1987,9 +1987,9 @@ jobs:
     name: macOS arm64 - Stage 11/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-10.outputs.finished != 'true' }}
     needs: macos-arm64-build-10
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 11
@@ -2007,9 +2007,9 @@ jobs:
     name: macOS arm64 - Stage 12/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-11.outputs.finished != 'true' }}
     needs: macos-arm64-build-11
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 12
@@ -2027,9 +2027,9 @@ jobs:
     name: macOS arm64 - Stage 13/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-12.outputs.finished != 'true' }}
     needs: macos-arm64-build-12
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 13
@@ -2047,9 +2047,9 @@ jobs:
     name: macOS arm64 - Stage 14/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-13.outputs.finished != 'true' }}
     needs: macos-arm64-build-13
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 14
@@ -2067,9 +2067,9 @@ jobs:
     name: macOS arm64 - Stage 15/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-14.outputs.finished != 'true' }}
     needs: macos-arm64-build-14
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 15
@@ -2087,9 +2087,9 @@ jobs:
     name: macOS arm64 - Stage 16/16 (Final)
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-15.outputs.finished != 'true' }}
     needs: macos-arm64-build-15
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 16
@@ -2111,9 +2111,9 @@ jobs:
     name: Linux arm64 - Stage 1/16
     needs: validate-config
     if: ${{ inputs.build_linux_arm64 }}
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 1
@@ -2131,9 +2131,9 @@ jobs:
     name: Linux arm64 - Stage 2/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-1.outputs.finished != 'true' }}
     needs: linux-arm64-build-1
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 2
@@ -2151,9 +2151,9 @@ jobs:
     name: Linux arm64 - Stage 3/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-2.outputs.finished != 'true' }}
     needs: linux-arm64-build-2
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 3
@@ -2171,9 +2171,9 @@ jobs:
     name: Linux arm64 - Stage 4/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-3.outputs.finished != 'true' }}
     needs: linux-arm64-build-3
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 4
@@ -2191,9 +2191,9 @@ jobs:
     name: Linux arm64 - Stage 5/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-4.outputs.finished != 'true' }}
     needs: linux-arm64-build-4
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 5
@@ -2211,9 +2211,9 @@ jobs:
     name: Linux arm64 - Stage 6/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-5.outputs.finished != 'true' }}
     needs: linux-arm64-build-5
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 6
@@ -2231,9 +2231,9 @@ jobs:
     name: Linux arm64 - Stage 7/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-6.outputs.finished != 'true' }}
     needs: linux-arm64-build-6
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 7
@@ -2251,9 +2251,9 @@ jobs:
     name: Linux arm64 - Stage 8/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-7.outputs.finished != 'true' }}
     needs: linux-arm64-build-7
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 8
@@ -2271,9 +2271,9 @@ jobs:
     name: Linux arm64 - Stage 9/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-8.outputs.finished != 'true' }}
     needs: linux-arm64-build-8
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 9
@@ -2291,9 +2291,9 @@ jobs:
     name: Linux arm64 - Stage 10/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-9.outputs.finished != 'true'  }}
     needs: linux-arm64-build-9
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 10
@@ -2311,9 +2311,9 @@ jobs:
     name: Linux arm64 - Stage 11/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-10.outputs.finished != 'true' }}
     needs: linux-arm64-build-10
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 11
@@ -2331,9 +2331,9 @@ jobs:
     name: Linux arm64 - Stage 12/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-11.outputs.finished != 'true' }}
     needs: linux-arm64-build-11
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 12
@@ -2351,9 +2351,9 @@ jobs:
     name: Linux arm64 - Stage 13/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-12.outputs.finished != 'true' }}
     needs: linux-arm64-build-12
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 13
@@ -2371,9 +2371,9 @@ jobs:
     name: Linux arm64 - Stage 14/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-13.outputs.finished != 'true' }}
     needs: linux-arm64-build-13
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 14
@@ -2391,9 +2391,9 @@ jobs:
     name: Linux arm64 - Stage 15/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-14.outputs.finished != 'true' }}
     needs: linux-arm64-build-14
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 15
@@ -2411,9 +2411,9 @@ jobs:
     name: Linux arm64 - Stage 16/16 (Final)
     if: ${{ inputs.build_linux_arm64  && needs.linux-arm64-build-15.outputs.finished != 'true' }}
     needs: linux-arm64-build-15
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/builder.yml
     with:
+      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 16

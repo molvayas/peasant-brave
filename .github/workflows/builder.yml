@@ -32,6 +32,10 @@ on:
         description: 'Workflow run ID for unique log naming'
         required: true
         type: string
+      environment:
+        description: 'Deployment environment for accessing environment-specific secrets'
+        required: false
+        type: string
     secrets:
       PRIVATE_REPO_PAT:
         description: 'PAT for accessing private repositories (patches, etc.)'
@@ -53,6 +57,7 @@ on:
 jobs:
   build:
     runs-on: ${{ inputs.platform == 'linux' && 'ubuntu-22.04' || inputs.platform == 'macos' && 'macos-latest' || 'windows-2022' }}
+    environment: ${{ inputs.environment != '' && inputs.environment || null }}
     
     steps:
       # Checkout main repo (for versions.txt)
