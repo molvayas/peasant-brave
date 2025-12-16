@@ -1,0 +1,117 @@
+name: Build Stage (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        description: 'Target platform (linux, macos, windows)'
+        required: true
+        type: string
+      arch:
+        description: 'Target architecture (x64, arm64)'
+        required: true
+        type: string
+      stage:
+        description: 'Build stage number (1-6)'
+        required: true
+        type: number
+      from_artifact:
+        description: 'Resume from previous stage artifact'
+        required: true
+        type: boolean
+      finished:
+        description: 'Build already finished in previous stage'
+        required: true
+        type: string
+      build_type:
+        description: 'Build type: Component (dev/debug) or Release (official)'
+        required: false
+        type: string
+        default: 'Component'
+    secrets:
+      PRIVATE_REPO_PAT:
+        description: 'PAT for accessing private repositories (patches, etc.)'
+        required: true
+      BRAVE_ENV_CONFIG:
+        description: 'Contents of .env file for Brave build (API keys, secrets, etc.)'
+        required: false
+      ARCHIVE_PASSWORD:
+        description: 'Password for encrypting build artifacts (optional, for enhanced security)'
+        required: false
+    outputs:
+      finished:
+        description: 'Whether the build has finished'
+        value: ${{ jobs.build.outputs.finished }}
+
+jobs:
+  build:
+    runs-on: ${{ inputs.platform == 'linux' && 'ubuntu-22.04' || inputs.platform == 'macos' && 'macos-latest' || 'windows-2022' }}
+    
+    steps:
+      # Checkout main repo (for brave_version.txt)
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+      
+      # Checkout private build system (contains actual action code)
+      - name: Checkout build system (private)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/peasant-build-system
+          token: ${{ secrets.PRIVATE_REPO_PAT }}
+          path: build-system
+      
+      # Checkout patch repositories
+      - name: Checkout public patches (MPL)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/peasant-patches-mpl
+          path: patches-public
+      
+      - name: Checkout private patches
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/peasant-patches-private
+          token: ${{ secrets.PRIVATE_REPO_PAT }}
+          path: patches-private
+      
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install cleanup-disk action dependencies
+        if: ${{ inputs.finished != 'true' }}
+        run: npm install
+        working-directory: ./build-system/.github/actions/cleanup-disk
+      
+      - name: Free up disk space (${{ inputs.platform }})
+        if: ${{ inputs.finished != 'true' }}
+        uses: ./build-system/.github/actions/cleanup-disk
+        with:
+          platform: ${{ inputs.platform }}
+      
+      - name: Install stage action dependencies
+        run: npm install
+        working-directory: ./build-system/.github/actions/stage
+      
+      - name: Run build stage ${{ inputs.stage }} (${{ inputs.platform }}-${{ inputs.arch }})
+        id: stage
+        uses: ./build-system/.github/actions/stage
+        env:
+          ARCHIVE_PASSWORD: ${{ secrets.ARCHIVE_PASSWORD }}
+        with:
+          finished: ${{ inputs.finished }}
+          from_artifact: ${{ inputs.from_artifact }}
+          platform: ${{ inputs.platform }}
+          arch: ${{ inputs.arch }}
+          build_type: ${{ inputs.build_type }}
+          env_config: ${{ secrets.BRAVE_ENV_CONFIG }}
+    
+    outputs:
+      finished: ${{ steps.stage.outputs.finished }}
+
