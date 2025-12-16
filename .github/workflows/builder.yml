@@ -66,13 +66,14 @@ jobs:
         run: |
           if [ -f versions.txt ]; then
             echo "Reading versions from versions.txt..."
+            # Strip CRLF first (Windows line endings), then process
             while IFS='=' read -r key value || [ -n "$key" ]; do
-              # Skip comments and empty lines
-              [[ "$key" =~ ^#.*$ ]] && continue
+              # Strip carriage returns (Windows CRLF)
+              key=$(echo "$key" | tr -d '\r' | xargs)
+              value=$(echo "$value" | tr -d '\r' | xargs)
+              # Skip comments and empty lines (after trimming)
               [[ -z "$key" ]] && continue
-              # Trim whitespace
-              key=$(echo "$key" | xargs)
-              value=$(echo "$value" | xargs)
+              [[ "$key" =~ ^#.*$ ]] && continue
               echo "${key}=${value}" >> $GITHUB_OUTPUT
               echo "  $key = $value"
             done < versions.txt
