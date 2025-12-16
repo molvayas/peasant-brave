@@ -2319,34 +2319,6 @@ jobs:
             echo "$checksum  $filename"
           done
       
-      - name: Sign checksums with GPG (optional)
-        if: ${{ inputs.publish_release }}
-        env:
-          GPG_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-        run: |
-          if [ -z "$GPG_KEY" ]; then
-            echo "⚠️  GPG_PRIVATE_KEY secret not configured - skipping signature generation"
-            echo "To enable GPG signing, add GPG_PRIVATE_KEY to repository secrets"
-            exit 0
-          fi
-          
-          echo "=== Setting up GPG ==="
-          # Import GPG key from secrets
-          echo "$GPG_KEY" | gpg --batch --import
-          
-          echo "=== Signing checksums ==="
-          cd ./artifacts
-          
-          # Sign all checksum files
-          find . -name "*.sha256" | while read -r file; do
-            echo "Signing: $file"
-            gpg --batch --yes --armor --detach-sign "$file"
-            echo "Created: $file.asc"
-          done
-          
-          echo ""
-          echo "=== Generated signatures ==="
-          find . -name "*.asc" -exec ls -lh {} \;
       
       - name: Upload combined artifacts for release
         uses: actions/upload-artifact@v4
@@ -2398,11 +2370,10 @@ jobs:
           | 🪟 Windows arm64 | ${{ inputs.build_windows_arm64 && '✅ Built' || '⏭️ Skipped' }} | ${{ inputs.build_type }} |
           | 🪟 Windows x86 | ${{ inputs.build_windows_x86 && '✅ Built' || '⏭️ Skipped' }} | ${{ inputs.build_type }} |
           
-          ## 🔐 Security & Verification
-          
-          - **Checksums**: SHA256 generated for all artifacts
-          - **GPG Signatures**: ${{ secrets.GPG_PRIVATE_KEY && '✅ Enabled' || '⚠️ Not configured' }}
-          - **Release Type**: Pre-release (custom rebuild)
+        ## 🔐 Security & Verification
+        
+        - **Checksums**: SHA256 generated for all artifacts
+        - **Release Type**: Pre-release (custom rebuild)
           
           ## 📊 Release Status
           
@@ -2459,7 +2430,6 @@ jobs:
           files: |
             ./release/**/*.zip
             ./release/**/*.sha256
-            ./release/**/*.asc
       
       - name: Release published
         run: |
