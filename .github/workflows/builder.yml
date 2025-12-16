@@ -12,7 +12,7 @@ on:
         required: true
         type: string
       stage:
-        description: 'Build stage number (1-6)'
+        description: 'Build stage number (1-16)'
         required: true
         type: number
       from_artifact:
@@ -28,6 +28,10 @@ on:
         required: false
         type: string
         default: 'Component'
+      run_id:
+        description: 'Workflow run ID for unique log naming'
+        required: true
+        type: string
     secrets:
       PRIVATE_REPO_PAT:
         description: 'PAT for accessing private repositories (patches, etc.)'
@@ -51,29 +55,56 @@ jobs:
     runs-on: ${{ inputs.platform == 'linux' && 'ubuntu-22.04' || inputs.platform == 'macos' && 'macos-latest' || 'windows-2022' }}
     
     steps:
-      # Checkout main repo (for brave_version.txt)
+      # Checkout main repo (for versions.txt)
       - name: Checkout main repository
         uses: actions/checkout@v4
       
-      # Checkout private build system (contains actual action code)
+      # Parse versions.txt to get dependency versions
+      - name: Parse versions.txt
+        id: versions
+        shell: bash
+        run: |
+          if [ -f versions.txt ]; then
+            echo "Reading versions from versions.txt..."
+            while IFS='=' read -r key value || [ -n "$key" ]; do
+              # Skip comments and empty lines
+              [[ "$key" =~ ^#.*$ ]] && continue
+              [[ -z "$key" ]] && continue
+              # Trim whitespace
+              key=$(echo "$key" | xargs)
+              value=$(echo "$value" | xargs)
+              echo "${key}=${value}" >> $GITHUB_OUTPUT
+              echo "  $key = $value"
+            done < versions.txt
+          else
+            echo "versions.txt not found, using defaults"
+            echo "build_system=main" >> $GITHUB_OUTPUT
+            echo "patches_public=main" >> $GITHUB_OUTPUT
+            echo "patches_private=main" >> $GITHUB_OUTPUT
+          fi
+      
+      # Checkout private build system with version tag
       - name: Checkout build system (private)
         uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/peasant-build-system
+          ref: ${{ steps.versions.outputs.build_system || 'main' }}
           token: ${{ secrets.PRIVATE_REPO_PAT }}
           path: build-system
       
-      # Checkout patch repositories
+      # Checkout patch repositories with version tags
       - name: Checkout public patches (MPL)
         uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/peasant-patches-mpl
+          ref: ${{ steps.versions.outputs.patches_public || 'main' }}
           path: patches-public
       
       - name: Checkout private patches
         uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/peasant-patches-private
+          ref: ${{ steps.versions.outputs.patches_private || 'main' }}
           token: ${{ secrets.PRIVATE_REPO_PAT }}
           path: patches-private
       
@@ -103,6 +134,7 @@ jobs:
           platform: ${{ inputs.platform }}
           arch: ${{ inputs.arch }}
           stage: ${{ inputs.stage }}
+          run_id: ${{ inputs.run_id }}
           build_type: ${{ inputs.build_type }}
           env_config: ${{ secrets.BRAVE_ENV_CONFIG }}
       
@@ -111,8 +143,8 @@ jobs:
         if: always() && env.LOG_PASSWORD != ''
         uses: actions/upload-artifact@v4
         with:
-          name: build-log-${{ inputs.platform }}-${{ inputs.arch }}-stage${{ inputs.stage }}
-          path: ${{ github.workspace }}/build-log-${{ inputs.platform }}-${{ inputs.arch }}-stage${{ inputs.stage }}.enc
+          name: build-log-${{ inputs.run_id }}-${{ inputs.platform }}-${{ inputs.arch }}-stage${{ inputs.stage }}
+          path: ${{ github.workspace }}/build-log-${{ inputs.run_id }}-${{ inputs.platform }}-${{ inputs.arch }}-stage${{ inputs.stage }}.enc
           retention-days: 7
           if-no-files-found: ignore
         env:
@@ -120,4 +152,3 @@ jobs:
     
     outputs:
       finished: ${{ steps.stage.outputs.finished }}
-

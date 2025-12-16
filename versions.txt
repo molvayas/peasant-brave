@@ -1,0 +1,9 @@
+# Version tags for build dependencies
+# Each line specifies a git tag/branch/commit to checkout
+# Empty or missing values use the default branch (main/master)
+
+brave_version=v1.85.74
+build_system=main
+patches_public=main
+patches_private=main
+
