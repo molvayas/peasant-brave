@@ -38,23 +38,133 @@ on:
         required: true
         type: boolean
         default: false
+      environment:
+        description: 'Deployment environment'
+        required: false
+        type: environment
       publish_release:
         description: 'Publish GitHub release (uncheck for test builds)'
         required: true
         type: boolean
         default: false
-      environment:
-        description: 'Deployment environment'
+      version_override:
+        description: 'Override versions (format: brave_version=v1.85.74;build_system=main) - BLOCKED if ALLOW_PUBLISH_RELEASE=true'
         required: false
-        type: environment
+        type: string
+        default: ''
 
 jobs:
+  # ============================================================================
+  # Validate Configuration - Runs First, Blocks Invalid Overrides
+  # ============================================================================
+  
+  validate-config:
+    name: 🔍 Validate Configuration
+    runs-on: ubuntu-latest
+    outputs:
+      brave_version: ${{ steps.validate.outputs.brave_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Validate version configuration
+        id: validate
+        run: |
+          echo "=== Version Configuration Validation ==="
+          
+          VERSION_OVERRIDE="${{ inputs.version_override }}"
+          ALLOW_RELEASE="${{ vars.ALLOW_PUBLISH_RELEASE }}"
+          
+          # Check if override is provided
+          if [ -n "$VERSION_OVERRIDE" ]; then
+            echo "Version override requested: $VERSION_OVERRIDE"
+            echo ""
+            
+            # Block override if ALLOW_PUBLISH_RELEASE is true
+            if [ "$ALLOW_RELEASE" = "true" ]; then
+              echo "=========================================="
+              echo "FATAL: Version override is BLOCKED!"
+              echo ""
+              echo "ALLOW_PUBLISH_RELEASE=true means this repository"
+              echo "can publish releases. Version overrides are not"
+              echo "allowed in release-capable repositories."
+              echo ""
+              echo "To use version overrides, set ALLOW_PUBLISH_RELEASE"
+              echo "to 'false' or remove the variable."
+              echo "=========================================="
+              exit 1
+            fi
+            
+            echo "✓ Override allowed (ALLOW_PUBLISH_RELEASE is not 'true')"
+            echo ""
+            
+            # Parse and apply overrides to versions.txt
+            cp versions.txt versions.txt.bak
+            
+            # Valid keys
+            VALID_KEYS="brave_version build_system patches_public patches_private"
+            
+            IFS=';' read -ra OVERRIDES <<< "$VERSION_OVERRIDE"
+            for override in "${OVERRIDES[@]}"; do
+              [ -z "$override" ] && continue
+              
+              # Validate format
+              if [[ ! "$override" =~ ^[a-z_]+=[a-zA-Z0-9._/-]+$ ]]; then
+                echo "=========================================="
+                echo "FATAL: Invalid override format: '$override'"
+                echo ""
+                echo "Expected: key=value (e.g., brave_version=v1.85.74)"
+                echo "Valid keys: $VALID_KEYS"
+                echo "=========================================="
+                exit 1
+              fi
+              
+              key="${override%%=*}"
+              value="${override#*=}"
+              
+              # Check key is valid
+              if ! echo "$VALID_KEYS" | grep -qw "$key"; then
+                echo "=========================================="
+                echo "FATAL: Unknown key: '$key'"
+                echo "Valid keys: $VALID_KEYS"
+                echo "=========================================="
+                exit 1
+              fi
+              
+              # Apply override (replace or add)
+              if grep -q "^${key}=" versions.txt; then
+                sed -i "s|^${key}=.*|${key}=${value}|" versions.txt
+              else
+                echo "${key}=${value}" >> versions.txt
+              fi
+              echo "✓ Override applied: $key=$value"
+            done
+            
+            echo ""
+            echo "⚠️  WARNING: Using overridden versions (test build only)"
+          else
+            echo "No version override - using committed versions.txt"
+          fi
+          
+          # Show final versions
+          echo ""
+          echo "=== Final Version Configuration ==="
+          cat versions.txt
+          
+          # Extract brave_version for output
+          BRAVE_VERSION=$(grep -E "^brave_version=" versions.txt | cut -d'=' -f2 | tr -d ' ')
+          echo "brave_version=$BRAVE_VERSION" >> $GITHUB_OUTPUT
+          
+          echo ""
+          echo "✓ Validation complete"
+
   # ============================================================================
   # Linux x64 Build Chain (16 stages)
   # ============================================================================
   
   linux-x64-build-1:
     name: Linux x64 - Stage 1/16
+    needs: validate-config
     if: ${{ inputs.build_linux_x64 }}
     uses: ./.github/workflows/builder.yml
     with:
@@ -362,6 +472,7 @@ jobs:
   
   windows-x64-build-1:
     name: Windows x64 - Stage 1/16
+    needs: validate-config
     if: ${{ inputs.build_windows_x64 }}
     uses: ./.github/workflows/builder.yml
     with:
@@ -669,6 +780,7 @@ jobs:
   
   windows-arm64-build-1:
     name: Windows arm64 - Stage 1/16
+    needs: validate-config
     if: ${{ inputs.build_windows_arm64 }}
     uses: ./.github/workflows/builder.yml
     with:
@@ -976,6 +1088,7 @@ jobs:
   
   windows-x86-build-1:
     name: Windows x86 - Stage 1/16
+    needs: validate-config
     if: ${{ inputs.build_windows_x86 }}
     uses: ./.github/workflows/builder.yml
     with:
@@ -1283,6 +1396,7 @@ jobs:
   
   macos-x64-build-1:
     name: macOS x64 - Stage 1/16
+    needs: validate-config
     if: ${{ inputs.build_macos_x64 }}
     uses: ./.github/workflows/builder.yml
     with:
@@ -1590,6 +1704,7 @@ jobs:
   
   macos-arm64-build-1:
     name: macOS arm64 - Stage 1/16
+    needs: validate-config
     if: ${{ inputs.build_macos_arm64 }}
     uses: ./.github/workflows/builder.yml
     with:
@@ -1897,6 +2012,7 @@ jobs:
   
   linux-arm64-build-1:
     name: Linux arm64 - Stage 1/16
+    needs: validate-config
     if: ${{ inputs.build_linux_arm64 }}
     uses: ./.github/workflows/builder.yml
     with:
@@ -2282,41 +2398,28 @@ jobs:
           fi
           echo ""
           echo "✓ All selected builds completed!"
-          if [ "${{ inputs.publish_release }}" == "true" ]; then
+          if [ "${{ inputs.publish_release }}" == "true" ] && [ "${{ vars.ALLOW_PUBLISH_RELEASE }}" == "true" ]; then
             echo "✓ Ready for release publishing"
           else
             echo "ℹ️  Test build - artifacts available in workflow run"
-            echo "ℹ️  Release publishing is disabled"
+            echo "ℹ️  Release publishing is disabled (requires publish_release=true and ALLOW_PUBLISH_RELEASE variable=true)"
           fi
       
-      - name: Generate checksums and signatures
-        if: ${{ inputs.publish_release }}
+      - name: Verify encrypted artifacts
         run: |
-          echo "=== Generating SHA256 checksums ==="
+          echo "=== Verifying Encrypted Artifacts ==="
           cd ./artifacts
           
-          # Generate SHA256 for all release archives (only .zip for release builds)
-          find . -type f -name "*.zip" | while read -r file; do
-            echo "Generating checksum for: $file"
-            checksum=$(sha256sum "$file" | sed 's|./||')
-            echo "$checksum" > "$file.sha256"
-            echo "Created: $file.sha256"
-            # Echo the checksum for visibility in logs
-            echo "SHA256: $checksum"
-          done
+          # List all encrypted files (checksums will be generated after decryption in publish-release)
+          echo "Encrypted packages (GPG - Linux/macOS):"
+          find . -type f -name "*.gpg" -exec ls -lh {} \; || echo "  (none)"
           
           echo ""
-          echo "=== Generated checksums ==="
-          find . -name "*.sha256" -exec cat {} \;
+          echo "Encrypted packages (7z - Windows):"
+          find . -type f -name "*.7z" -exec ls -lh {} \; || echo "  (none)"
           
           echo ""
-          echo "=== Checksum Summary (for verification) ==="
-          find . -name "*.sha256" | while read -r checksum_file; do
-            artifact_file="${checksum_file%.sha256}"
-            checksum=$(cat "$checksum_file")
-            filename=$(basename "$artifact_file")
-            echo "$checksum  $filename"
-          done
+          echo "Note: SHA256 checksums will be generated after decryption in publish-release job"
       
       
       - name: Upload combined artifacts for release
@@ -2332,7 +2435,7 @@ jobs:
   
   publish-release:
     name: 📦 Publish Release
-    if: ${{ inputs.publish_release }}
+    if: ${{ inputs.publish_release && vars.ALLOW_PUBLISH_RELEASE == 'true' }}
     needs: collect-artifacts
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
@@ -2344,10 +2447,98 @@ jobs:
           name: brave-browser-all-platforms
           path: ./release
       
-      - name: Display release contents
+      - name: Display encrypted contents
         run: |
-          echo "=== Release Contents ==="
+          echo "=== Downloaded Encrypted Artifacts ==="
           find ./release -type f -exec ls -lh {} \;
+          echo ""
+      
+      - name: Decrypt artifacts (GPG - Linux/macOS)
+        env:
+          ARCHIVE_PASSWORD: ${{ secrets.ARCHIVE_PASSWORD }}
+        run: |
+          echo "=== Decrypting GPG-encrypted artifacts ==="
+          
+          if [ -z "$ARCHIVE_PASSWORD" ]; then
+            echo "⚠️  ARCHIVE_PASSWORD not set - checking for unencrypted files"
+          else
+            echo "✓ ARCHIVE_PASSWORD is set"
+          fi
+          
+          # Find and decrypt all .gpg files (Linux/macOS packages)
+          find ./release -name "*.gpg" | while read -r gpg_file; do
+            echo "Decrypting: $gpg_file"
+            output_file="${gpg_file%.gpg}"
+            
+            echo "$ARCHIVE_PASSWORD" | gpg --batch --yes --passphrase-fd 0 --decrypt --output "$output_file" "$gpg_file"
+            
+            if [ $? -eq 0 ]; then
+              echo "✓ Decrypted to: $output_file"
+              rm "$gpg_file"
+            else
+              echo "✗ Failed to decrypt: $gpg_file"
+              exit 1
+            fi
+          done
+          
+          echo "✓ GPG decryption complete"
+      
+      - name: Decrypt artifacts (7z - Windows)
+        env:
+          ARCHIVE_PASSWORD: ${{ secrets.ARCHIVE_PASSWORD }}
+        run: |
+          echo "=== Decrypting 7z-encrypted artifacts ==="
+          
+          # Install p7zip for extracting 7z files
+          sudo apt-get update && sudo apt-get install -y p7zip-full
+          
+          # Find and decrypt all .7z files (Windows packages)
+          find ./release -name "*.7z" | while read -r sevenzip_file; do
+            echo "Decrypting: $sevenzip_file"
+            output_dir=$(dirname "$sevenzip_file")
+            
+            7z x "$sevenzip_file" -o"$output_dir" -p"$ARCHIVE_PASSWORD" -y
+            
+            if [ $? -eq 0 ]; then
+              echo "✓ Extracted to: $output_dir"
+              rm "$sevenzip_file"
+            else
+              echo "✗ Failed to decrypt: $sevenzip_file"
+              exit 1
+            fi
+          done
+          
+          echo "✓ 7z decryption complete"
+      
+      - name: Display decrypted release contents
+        run: |
+          echo "=== Decrypted Release Contents ==="
+          find ./release -type f -exec ls -lh {} \;
+          echo ""
+      
+      - name: Generate checksums for release
+        run: |
+          echo "=== Generating SHA256 checksums ==="
+          cd ./release
+          
+          # Generate SHA256 for all release archives (.zip files)
+          find . -type f -name "*.zip" | while read -r file; do
+            echo "Generating checksum for: $file"
+            checksum=$(sha256sum "$file" | sed 's|./||')
+            echo "$checksum" > "$file.sha256"
+            echo "Created: $file.sha256"
+            echo "SHA256: $checksum"
+          done
+          
+          echo ""
+          echo "=== Checksum Summary ==="
+          find . -name "*.sha256" | while read -r checksum_file; do
+            artifact_file="${checksum_file%.sha256}"
+            checksum=$(cat "$checksum_file")
+            filename=$(basename "$artifact_file")
+            echo "$checksum  $filename"
+          done
+          
           echo ""
           echo "Publishing to GitHub Releases..."
       
@@ -2376,7 +2567,7 @@ jobs:
           
           ## 📊 Release Status
           
-          - **Publishing**: ${{ inputs.publish_release && '✅ Enabled' || '❌ Disabled (test build)' }}
+          - **Publishing**: ${{ inputs.publish_release && '✅ Requested' || '❌ Disabled' }} (ALLOW_PUBLISH_RELEASE variable controls actual publishing)
           - **Environment**: ${{ inputs.environment && inputs.environment || '⏭️ None selected' }}
           - **Workflow Run**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
           
