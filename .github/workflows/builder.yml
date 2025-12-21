@@ -146,17 +146,6 @@ jobs:
           build_type: ${{ inputs.build_type }}
           env_config: ${{ secrets.BRAVE_ENV_CONFIG }}
       
-      # Upload encrypted log (even if build fails)
-      - name: Upload encrypted build log
-        if: always() && env.LOG_PASSWORD != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log-${{ inputs.run_id }}-${{ inputs.platform }}-${{ inputs.arch }}-stage${{ inputs.stage }}
-          path: ${{ github.workspace }}/build-log-${{ inputs.run_id }}-${{ inputs.platform }}-${{ inputs.arch }}-stage${{ inputs.stage }}.enc
-          retention-days: 7
-          if-no-files-found: ignore
-        env:
-          LOG_PASSWORD: ${{ secrets.LOG_PASSWORD }}
     
     outputs:
       finished: ${{ steps.stage.outputs.finished }}
