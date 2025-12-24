@@ -2549,7 +2549,7 @@ jobs:
   
   publish-release:
     name: 📦 Publish Release
-    if: ${{ inputs.publish_release && vars.ALLOW_PUBLISH_RELEASE == 'true' }}
+    if: ${{ always() && needs.collect-artifacts.result == 'success' && inputs.publish_release && vars.ALLOW_PUBLISH_RELEASE == 'true' }}
     needs: collect-artifacts
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
