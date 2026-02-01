@@ -73,6 +73,8 @@ jobs:
       
       - name: Validate version configuration
         id: validate
+        env:
+          PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
         run: |
           echo "=== Version Configuration Validation ==="
           
@@ -212,24 +214,46 @@ jobs:
             echo "$ref"
           }
           
-          # Repository URLs
+          # Repository URLs (using PRIVATE_REPO_PAT env var for private repos)
           OWNER="${{ github.repository_owner }}"
-          BUILD_SYSTEM_URL="https://${{ secrets.PRIVATE_REPO_PAT }}@github.com/${OWNER}/peasant-build-system.git"
+          
+          if [ -z "$PRIVATE_REPO_PAT" ]; then
+            echo "⚠️  WARNING: PRIVATE_REPO_PAT not set - private repo commits cannot be frozen"
+            BUILD_SYSTEM_URL="https://github.com/${OWNER}/peasant-build-system.git"
+            PATCHES_PRIVATE_URL="https://github.com/${OWNER}/peasant-patches-private.git"
+          else
+            BUILD_SYSTEM_URL="https://${PRIVATE_REPO_PAT}@github.com/${OWNER}/peasant-build-system.git"
+            PATCHES_PRIVATE_URL="https://${PRIVATE_REPO_PAT}@github.com/${OWNER}/peasant-patches-private.git"
+          fi
           PATCHES_PUBLIC_URL="https://github.com/${OWNER}/peasant-patches-mpl.git"
-          PATCHES_PRIVATE_URL="https://${{ secrets.PRIVATE_REPO_PAT }}@github.com/${OWNER}/peasant-patches-private.git"
           
           # Resolve refs to commit SHAs (freeze the commits)
+          echo "PAT available: $([ -n "$PRIVATE_REPO_PAT" ] && echo 'yes' || echo 'no')"
+          echo ""
+          
           echo "Resolving build_system: $BUILD_SYSTEM"
           BUILD_SYSTEM_SHA=$(resolve_ref "$BUILD_SYSTEM_URL" "$BUILD_SYSTEM" "build-system")
-          echo "  → $BUILD_SYSTEM_SHA"
+          if [ "$BUILD_SYSTEM_SHA" = "$BUILD_SYSTEM" ] && [ "$BUILD_SYSTEM" != "" ] && [[ ! "$BUILD_SYSTEM" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "  → $BUILD_SYSTEM_SHA (⚠️ not resolved - will use ref as-is)"
+          else
+            echo "  → $BUILD_SYSTEM_SHA ✓"
+          fi
           
           echo "Resolving patches_public: $PATCHES_PUBLIC"
           PATCHES_PUBLIC_SHA=$(resolve_ref "$PATCHES_PUBLIC_URL" "$PATCHES_PUBLIC" "patches-public")
-          echo "  → $PATCHES_PUBLIC_SHA"
+          if [ "$PATCHES_PUBLIC_SHA" = "$PATCHES_PUBLIC" ] && [ "$PATCHES_PUBLIC" != "" ] && [[ ! "$PATCHES_PUBLIC" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "  → $PATCHES_PUBLIC_SHA (⚠️ not resolved - will use ref as-is)"
+          else
+            echo "  → $PATCHES_PUBLIC_SHA ✓"
+          fi
           
           echo "Resolving patches_private: $PATCHES_PRIVATE"
           PATCHES_PRIVATE_SHA=$(resolve_ref "$PATCHES_PRIVATE_URL" "$PATCHES_PRIVATE" "patches-private")
-          echo "  → $PATCHES_PRIVATE_SHA"
+          if [ "$PATCHES_PRIVATE_SHA" = "$PATCHES_PRIVATE" ] && [ "$PATCHES_PRIVATE" != "" ] && [[ ! "$PATCHES_PRIVATE" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "  → $PATCHES_PRIVATE_SHA (⚠️ not resolved - will use ref as-is)"
+          else
+            echo "  → $PATCHES_PRIVATE_SHA ✓"
+          fi
           
           # Output the frozen commit SHAs (or original ref if resolution failed)
           echo "brave_version=$BRAVE_VERSION" >> $GITHUB_OUTPUT
