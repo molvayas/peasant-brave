@@ -64,6 +64,9 @@ jobs:
     environment: ${{ inputs.environment }}
     outputs:
       brave_version: ${{ steps.validate.outputs.brave_version }}
+      build_system: ${{ steps.validate.outputs.build_system }}
+      patches_public: ${{ steps.validate.outputs.patches_public }}
+      patches_private: ${{ steps.validate.outputs.patches_private }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -152,10 +155,28 @@ jobs:
           echo "=== Final Version Configuration ==="
           cat versions.txt
           
-          # Extract brave_version for output
+          # Extract all versions for output (to pass to builder jobs)
           BRAVE_VERSION=$(grep -E "^brave_version=" versions.txt | cut -d'=' -f2 | tr -d ' ')
-          echo "brave_version=$BRAVE_VERSION" >> $GITHUB_OUTPUT
+          BUILD_SYSTEM=$(grep -E "^build_system=" versions.txt | cut -d'=' -f2 | tr -d ' ')
+          PATCHES_PUBLIC=$(grep -E "^patches_public=" versions.txt | cut -d'=' -f2 | tr -d ' ')
+          PATCHES_PRIVATE=$(grep -E "^patches_private=" versions.txt | cut -d'=' -f2 | tr -d ' ')
           
+          # Set defaults if not specified
+          [ -z "$BUILD_SYSTEM" ] && BUILD_SYSTEM="main"
+          [ -z "$PATCHES_PUBLIC" ] && PATCHES_PUBLIC="main"
+          [ -z "$PATCHES_PRIVATE" ] && PATCHES_PRIVATE="main"
+          
+          echo "brave_version=$BRAVE_VERSION" >> $GITHUB_OUTPUT
+          echo "build_system=$BUILD_SYSTEM" >> $GITHUB_OUTPUT
+          echo "patches_public=$PATCHES_PUBLIC" >> $GITHUB_OUTPUT
+          echo "patches_private=$PATCHES_PRIVATE" >> $GITHUB_OUTPUT
+          
+          echo ""
+          echo "=== Versions to be used by builder jobs ==="
+          echo "  brave_version=$BRAVE_VERSION"
+          echo "  build_system=$BUILD_SYSTEM"
+          echo "  patches_public=$PATCHES_PUBLIC"
+          echo "  patches_private=$PATCHES_PRIVATE"
           echo ""
           echo "✓ Validation complete"
 
@@ -177,6 +198,10 @@ jobs:
       finished: 'false'
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      patches_public_ref: ${{ needs.validate-config.outputs.patches_public }}
+      patches_private_ref: ${{ needs.validate-config.outputs.patches_private }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -186,7 +211,7 @@ jobs:
   linux-x64-build-2:
     name: Linux x64 - Stage 2/16
     if: ${{ inputs.build_linux_x64 }}
-    needs: linux-x64-build-1
+    needs: [validate-config, linux-x64-build-1]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -197,6 +222,8 @@ jobs:
       finished: ${{ needs.linux-x64-build-1.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -206,7 +233,7 @@ jobs:
   linux-x64-build-3:
     name: Linux x64 - Stage 3/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-2.outputs.finished != 'true' }}
-    needs: linux-x64-build-2
+    needs: [validate-config, linux-x64-build-2]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -217,6 +244,8 @@ jobs:
       finished: ${{ needs.linux-x64-build-2.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -226,7 +255,7 @@ jobs:
   linux-x64-build-4:
     name: Linux x64 - Stage 4/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-3.outputs.finished != 'true' }}
-    needs: linux-x64-build-3
+    needs: [validate-config, linux-x64-build-3]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -237,6 +266,8 @@ jobs:
       finished: ${{ needs.linux-x64-build-3.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -246,7 +277,7 @@ jobs:
   linux-x64-build-5:
     name: Linux x64 - Stage 5/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-4.outputs.finished != 'true' }}
-    needs: linux-x64-build-4
+    needs: [validate-config, linux-x64-build-4]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -257,6 +288,8 @@ jobs:
       finished: ${{ needs.linux-x64-build-4.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -266,7 +299,7 @@ jobs:
   linux-x64-build-6:
     name: Linux x64 - Stage 6/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-5.outputs.finished != 'true' }}
-    needs: linux-x64-build-5
+    needs: [validate-config, linux-x64-build-5]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -277,6 +310,8 @@ jobs:
       finished: ${{ needs.linux-x64-build-5.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -286,7 +321,7 @@ jobs:
   linux-x64-build-7:
     name: Linux x64 - Stage 7/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-6.outputs.finished != 'true' }}
-    needs: linux-x64-build-6
+    needs: [validate-config, linux-x64-build-6]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -297,6 +332,8 @@ jobs:
       finished: ${{ needs.linux-x64-build-6.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -306,7 +343,7 @@ jobs:
   linux-x64-build-8:
     name: Linux x64 - Stage 8/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-7.outputs.finished != 'true' }}
-    needs: linux-x64-build-7
+    needs: [validate-config, linux-x64-build-7]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -317,6 +354,8 @@ jobs:
       finished: ${{ needs.linux-x64-build-7.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -326,7 +365,7 @@ jobs:
   linux-x64-build-9:
     name: Linux x64 - Stage 9/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-8.outputs.finished != 'true' }}
-    needs: linux-x64-build-8
+    needs: [validate-config, linux-x64-build-8]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -337,6 +376,8 @@ jobs:
       finished: ${{ needs.linux-x64-build-8.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -346,7 +387,7 @@ jobs:
   linux-x64-build-10:
     name: Linux x64 - Stage 10/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-9.outputs.finished != 'true' }}
-    needs: linux-x64-build-9
+    needs: [validate-config, linux-x64-build-9]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -357,6 +398,8 @@ jobs:
       finished: ${{ needs.linux-x64-build-9.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -366,7 +409,7 @@ jobs:
   linux-x64-build-11:
     name: Linux x64 - Stage 11/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-10.outputs.finished != 'true' }}
-    needs: linux-x64-build-10
+    needs: [validate-config, linux-x64-build-10]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -377,6 +420,8 @@ jobs:
       finished: ${{ needs.linux-x64-build-10.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -386,7 +431,7 @@ jobs:
   linux-x64-build-12:
     name: Linux x64 - Stage 12/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-11.outputs.finished != 'true' }}
-    needs: linux-x64-build-11
+    needs: [validate-config, linux-x64-build-11]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -397,6 +442,8 @@ jobs:
       finished: ${{ needs.linux-x64-build-11.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -406,7 +453,7 @@ jobs:
   linux-x64-build-13:
     name: Linux x64 - Stage 13/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-12.outputs.finished != 'true' }}
-    needs: linux-x64-build-12
+    needs: [validate-config, linux-x64-build-12]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -417,6 +464,8 @@ jobs:
       finished: ${{ needs.linux-x64-build-12.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -426,7 +475,7 @@ jobs:
   linux-x64-build-14:
     name: Linux x64 - Stage 14/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-13.outputs.finished != 'true' }}
-    needs: linux-x64-build-13
+    needs: [validate-config, linux-x64-build-13]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -437,6 +486,8 @@ jobs:
       finished: ${{ needs.linux-x64-build-13.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -446,7 +497,7 @@ jobs:
   linux-x64-build-15:
     name: Linux x64 - Stage 15/16
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-14.outputs.finished != 'true' }}
-    needs: linux-x64-build-14
+    needs: [validate-config, linux-x64-build-14]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -457,6 +508,8 @@ jobs:
       finished: ${{ needs.linux-x64-build-14.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -466,7 +519,7 @@ jobs:
   linux-x64-build-16:
     name: Linux x64 - Stage 16/16 (Final)
     if: ${{ inputs.build_linux_x64 && needs.linux-x64-build-15.outputs.finished != 'true' }}
-    needs: linux-x64-build-15
+    needs: [validate-config, linux-x64-build-15]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -477,6 +530,8 @@ jobs:
       finished: ${{ needs.linux-x64-build-15.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -501,6 +556,10 @@ jobs:
       finished: 'false'
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      patches_public_ref: ${{ needs.validate-config.outputs.patches_public }}
+      patches_private_ref: ${{ needs.validate-config.outputs.patches_private }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -510,7 +569,7 @@ jobs:
   windows-x64-build-2:
     name: Windows x64 - Stage 2/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-1.outputs.finished != 'true' }}
-    needs: windows-x64-build-1
+    needs: [validate-config, windows-x64-build-1]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -521,6 +580,8 @@ jobs:
       finished: ${{ needs.windows-x64-build-1.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -530,7 +591,7 @@ jobs:
   windows-x64-build-3:
     name: Windows x64 - Stage 3/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-2.outputs.finished != 'true' }}
-    needs: windows-x64-build-2
+    needs: [validate-config, windows-x64-build-2]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -541,6 +602,8 @@ jobs:
       finished: ${{ needs.windows-x64-build-2.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -550,7 +613,7 @@ jobs:
   windows-x64-build-4:
     name: Windows x64 - Stage 4/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-3.outputs.finished != 'true' }}
-    needs: windows-x64-build-3
+    needs: [validate-config, windows-x64-build-3]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -561,6 +624,8 @@ jobs:
       finished: ${{ needs.windows-x64-build-3.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -570,7 +635,7 @@ jobs:
   windows-x64-build-5:
     name: Windows x64 - Stage 5/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-4.outputs.finished != 'true' }}
-    needs: windows-x64-build-4
+    needs: [validate-config, windows-x64-build-4]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -581,6 +646,8 @@ jobs:
       finished: ${{ needs.windows-x64-build-4.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -590,7 +657,7 @@ jobs:
   windows-x64-build-6:
     name: Windows x64 - Stage 6/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-5.outputs.finished != 'true' }}
-    needs: windows-x64-build-5
+    needs: [validate-config, windows-x64-build-5]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -601,6 +668,8 @@ jobs:
       finished: ${{ needs.windows-x64-build-5.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -610,7 +679,7 @@ jobs:
   windows-x64-build-7:
     name: Windows x64 - Stage 7/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-6.outputs.finished != 'true' }}
-    needs: windows-x64-build-6
+    needs: [validate-config, windows-x64-build-6]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -621,6 +690,8 @@ jobs:
       finished: ${{ needs.windows-x64-build-6.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -630,7 +701,7 @@ jobs:
   windows-x64-build-8:
     name: Windows x64 - Stage 8/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-7.outputs.finished != 'true' }}
-    needs: windows-x64-build-7
+    needs: [validate-config, windows-x64-build-7]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -641,6 +712,8 @@ jobs:
       finished: ${{ needs.windows-x64-build-7.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -650,7 +723,7 @@ jobs:
   windows-x64-build-9:
     name: Windows x64 - Stage 9/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-8.outputs.finished != 'true' }}
-    needs: windows-x64-build-8
+    needs: [validate-config, windows-x64-build-8]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -661,6 +734,8 @@ jobs:
       finished: ${{ needs.windows-x64-build-8.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -670,7 +745,7 @@ jobs:
   windows-x64-build-10:
     name: Windows x64 - Stage 10/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-9.outputs.finished != 'true' }}
-    needs: windows-x64-build-9
+    needs: [validate-config, windows-x64-build-9]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -681,6 +756,8 @@ jobs:
       finished: ${{ needs.windows-x64-build-9.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -690,7 +767,7 @@ jobs:
   windows-x64-build-11:
     name: Windows x64 - Stage 11/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-10.outputs.finished != 'true' }}
-    needs: windows-x64-build-10
+    needs: [validate-config, windows-x64-build-10]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -701,6 +778,8 @@ jobs:
       finished: ${{ needs.windows-x64-build-10.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -710,7 +789,7 @@ jobs:
   windows-x64-build-12:
     name: Windows x64 - Stage 12/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-11.outputs.finished != 'true' }}
-    needs: windows-x64-build-11
+    needs: [validate-config, windows-x64-build-11]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -721,6 +800,8 @@ jobs:
       finished: ${{ needs.windows-x64-build-11.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -730,7 +811,7 @@ jobs:
   windows-x64-build-13:
     name: Windows x64 - Stage 13/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-12.outputs.finished != 'true' }}
-    needs: windows-x64-build-12
+    needs: [validate-config, windows-x64-build-12]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -741,6 +822,8 @@ jobs:
       finished: ${{ needs.windows-x64-build-12.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -750,7 +833,7 @@ jobs:
   windows-x64-build-14:
     name: Windows x64 - Stage 14/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-13.outputs.finished != 'true' }}
-    needs: windows-x64-build-13
+    needs: [validate-config, windows-x64-build-13]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -761,6 +844,8 @@ jobs:
       finished: ${{ needs.windows-x64-build-13.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -770,7 +855,7 @@ jobs:
   windows-x64-build-15:
     name: Windows x64 - Stage 15/16
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-14.outputs.finished != 'true' }}
-    needs: windows-x64-build-14
+    needs: [validate-config, windows-x64-build-14]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -781,6 +866,8 @@ jobs:
       finished: ${{ needs.windows-x64-build-14.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -790,7 +877,7 @@ jobs:
   windows-x64-build-16:
     name: Windows x64 - Stage 16/16 (Final)
     if: ${{ inputs.build_windows_x64 && needs.windows-x64-build-15.outputs.finished != 'true' }}
-    needs: windows-x64-build-15
+    needs: [validate-config, windows-x64-build-15]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -801,6 +888,8 @@ jobs:
       finished: ${{ needs.windows-x64-build-15.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -825,6 +914,10 @@ jobs:
       finished: 'false'
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      patches_public_ref: ${{ needs.validate-config.outputs.patches_public }}
+      patches_private_ref: ${{ needs.validate-config.outputs.patches_private }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -834,7 +927,7 @@ jobs:
   windows-arm64-build-2:
     name: Windows arm64 - Stage 2/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-1.outputs.finished != 'true' }}
-    needs: windows-arm64-build-1
+    needs: [validate-config, windows-arm64-build-1]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -845,6 +938,8 @@ jobs:
       finished: ${{ needs.windows-arm64-build-1.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -854,7 +949,7 @@ jobs:
   windows-arm64-build-3:
     name: Windows arm64 - Stage 3/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-2.outputs.finished != 'true' }}
-    needs: windows-arm64-build-2
+    needs: [validate-config, windows-arm64-build-2]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -865,6 +960,8 @@ jobs:
       finished: ${{ needs.windows-arm64-build-2.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -874,7 +971,7 @@ jobs:
   windows-arm64-build-4:
     name: Windows arm64 - Stage 4/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-3.outputs.finished != 'true' }}
-    needs: windows-arm64-build-3
+    needs: [validate-config, windows-arm64-build-3]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -885,6 +982,8 @@ jobs:
       finished: ${{ needs.windows-arm64-build-3.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -894,7 +993,7 @@ jobs:
   windows-arm64-build-5:
     name: Windows arm64 - Stage 5/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-4.outputs.finished != 'true' }}
-    needs: windows-arm64-build-4
+    needs: [validate-config, windows-arm64-build-4]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -905,6 +1004,8 @@ jobs:
       finished: ${{ needs.windows-arm64-build-4.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -914,7 +1015,7 @@ jobs:
   windows-arm64-build-6:
     name: Windows arm64 - Stage 6/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-5.outputs.finished != 'true' }}
-    needs: windows-arm64-build-5
+    needs: [validate-config, windows-arm64-build-5]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -925,6 +1026,8 @@ jobs:
       finished: ${{ needs.windows-arm64-build-5.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -934,7 +1037,7 @@ jobs:
   windows-arm64-build-7:
     name: Windows arm64 - Stage 7/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-6.outputs.finished != 'true' }}
-    needs: windows-arm64-build-6
+    needs: [validate-config, windows-arm64-build-6]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -945,6 +1048,8 @@ jobs:
       finished: ${{ needs.windows-arm64-build-6.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -954,7 +1059,7 @@ jobs:
   windows-arm64-build-8:
     name: Windows arm64 - Stage 8/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-7.outputs.finished != 'true' }}
-    needs: windows-arm64-build-7
+    needs: [validate-config, windows-arm64-build-7]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -965,6 +1070,8 @@ jobs:
       finished: ${{ needs.windows-arm64-build-7.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -974,7 +1081,7 @@ jobs:
   windows-arm64-build-9:
     name: Windows arm64 - Stage 9/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-8.outputs.finished != 'true' }}
-    needs: windows-arm64-build-8
+    needs: [validate-config, windows-arm64-build-8]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -985,6 +1092,8 @@ jobs:
       finished: ${{ needs.windows-arm64-build-8.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -994,7 +1103,7 @@ jobs:
   windows-arm64-build-10:
     name: Windows arm64 - Stage 10/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-9.outputs.finished != 'true' }}
-    needs: windows-arm64-build-9
+    needs: [validate-config, windows-arm64-build-9]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1005,6 +1114,8 @@ jobs:
       finished: ${{ needs.windows-arm64-build-9.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1014,7 +1125,7 @@ jobs:
   windows-arm64-build-11:
     name: Windows arm64 - Stage 11/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-10.outputs.finished != 'true' }}
-    needs: windows-arm64-build-10
+    needs: [validate-config, windows-arm64-build-10]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1025,6 +1136,8 @@ jobs:
       finished: ${{ needs.windows-arm64-build-10.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1034,7 +1147,7 @@ jobs:
   windows-arm64-build-12:
     name: Windows arm64 - Stage 12/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-11.outputs.finished != 'true' }}
-    needs: windows-arm64-build-11
+    needs: [validate-config, windows-arm64-build-11]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1045,6 +1158,8 @@ jobs:
       finished: ${{ needs.windows-arm64-build-11.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1054,7 +1169,7 @@ jobs:
   windows-arm64-build-13:
     name: Windows arm64 - Stage 13/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-12.outputs.finished != 'true' }}
-    needs: windows-arm64-build-12
+    needs: [validate-config, windows-arm64-build-12]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1065,6 +1180,8 @@ jobs:
       finished: ${{ needs.windows-arm64-build-12.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1074,7 +1191,7 @@ jobs:
   windows-arm64-build-14:
     name: Windows arm64 - Stage 14/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-13.outputs.finished != 'true' }}
-    needs: windows-arm64-build-13
+    needs: [validate-config, windows-arm64-build-13]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1085,6 +1202,8 @@ jobs:
       finished: ${{ needs.windows-arm64-build-13.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1094,7 +1213,7 @@ jobs:
   windows-arm64-build-15:
     name: Windows arm64 - Stage 15/16
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-14.outputs.finished != 'true' }}
-    needs: windows-arm64-build-14
+    needs: [validate-config, windows-arm64-build-14]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1105,6 +1224,8 @@ jobs:
       finished: ${{ needs.windows-arm64-build-14.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1114,7 +1235,7 @@ jobs:
   windows-arm64-build-16:
     name: Windows arm64 - Stage 16/16 (Final)
     if: ${{ inputs.build_windows_arm64 && needs.windows-arm64-build-15.outputs.finished != 'true' }}
-    needs: windows-arm64-build-15
+    needs: [validate-config, windows-arm64-build-15]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1125,6 +1246,8 @@ jobs:
       finished: ${{ needs.windows-arm64-build-15.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1149,6 +1272,10 @@ jobs:
       finished: 'false'
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      patches_public_ref: ${{ needs.validate-config.outputs.patches_public }}
+      patches_private_ref: ${{ needs.validate-config.outputs.patches_private }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1158,7 +1285,7 @@ jobs:
   windows-x86-build-2:
     name: Windows x86 - Stage 2/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-1.outputs.finished != 'true' }}
-    needs: windows-x86-build-1
+    needs: [validate-config, windows-x86-build-1]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1169,6 +1296,8 @@ jobs:
       finished: ${{ needs.windows-x86-build-1.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1178,7 +1307,7 @@ jobs:
   windows-x86-build-3:
     name: Windows x86 - Stage 3/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-2.outputs.finished != 'true' }}
-    needs: windows-x86-build-2
+    needs: [validate-config, windows-x86-build-2]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1189,6 +1318,8 @@ jobs:
       finished: ${{ needs.windows-x86-build-2.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1198,7 +1329,7 @@ jobs:
   windows-x86-build-4:
     name: Windows x86 - Stage 4/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-3.outputs.finished != 'true' }}
-    needs: windows-x86-build-3
+    needs: [validate-config, windows-x86-build-3]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1209,6 +1340,8 @@ jobs:
       finished: ${{ needs.windows-x86-build-3.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1218,7 +1351,7 @@ jobs:
   windows-x86-build-5:
     name: Windows x86 - Stage 5/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-4.outputs.finished != 'true' }}
-    needs: windows-x86-build-4
+    needs: [validate-config, windows-x86-build-4]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1229,6 +1362,8 @@ jobs:
       finished: ${{ needs.windows-x86-build-4.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1238,7 +1373,7 @@ jobs:
   windows-x86-build-6:
     name: Windows x86 - Stage 6/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-5.outputs.finished != 'true' }}
-    needs: windows-x86-build-5
+    needs: [validate-config, windows-x86-build-5]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1249,6 +1384,8 @@ jobs:
       finished: ${{ needs.windows-x86-build-5.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1258,7 +1395,7 @@ jobs:
   windows-x86-build-7:
     name: Windows x86 - Stage 7/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-6.outputs.finished != 'true' }}
-    needs: windows-x86-build-6
+    needs: [validate-config, windows-x86-build-6]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1269,6 +1406,8 @@ jobs:
       finished: ${{ needs.windows-x86-build-6.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1278,7 +1417,7 @@ jobs:
   windows-x86-build-8:
     name: Windows x86 - Stage 8/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-7.outputs.finished != 'true' }}
-    needs: windows-x86-build-7
+    needs: [validate-config, windows-x86-build-7]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1289,6 +1428,8 @@ jobs:
       finished: ${{ needs.windows-x86-build-7.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1298,7 +1439,7 @@ jobs:
   windows-x86-build-9:
     name: Windows x86 - Stage 9/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-8.outputs.finished != 'true' }}
-    needs: windows-x86-build-8
+    needs: [validate-config, windows-x86-build-8]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1309,6 +1450,8 @@ jobs:
       finished: ${{ needs.windows-x86-build-8.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1318,7 +1461,7 @@ jobs:
   windows-x86-build-10:
     name: Windows x86 - Stage 10/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-9.outputs.finished != 'true' }}
-    needs: windows-x86-build-9
+    needs: [validate-config, windows-x86-build-9]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1329,6 +1472,8 @@ jobs:
       finished: ${{ needs.windows-x86-build-9.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1338,7 +1483,7 @@ jobs:
   windows-x86-build-11:
     name: Windows x86 - Stage 11/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-10.outputs.finished != 'true' }}
-    needs: windows-x86-build-10
+    needs: [validate-config, windows-x86-build-10]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1349,6 +1494,8 @@ jobs:
       finished: ${{ needs.windows-x86-build-10.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1358,7 +1505,7 @@ jobs:
   windows-x86-build-12:
     name: Windows x86 - Stage 12/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-11.outputs.finished != 'true' }}
-    needs: windows-x86-build-11
+    needs: [validate-config, windows-x86-build-11]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1369,6 +1516,8 @@ jobs:
       finished: ${{ needs.windows-x86-build-11.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1378,7 +1527,7 @@ jobs:
   windows-x86-build-13:
     name: Windows x86 - Stage 13/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-12.outputs.finished != 'true' }}
-    needs: windows-x86-build-12
+    needs: [validate-config, windows-x86-build-12]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1389,6 +1538,8 @@ jobs:
       finished: ${{ needs.windows-x86-build-12.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1398,7 +1549,7 @@ jobs:
   windows-x86-build-14:
     name: Windows x86 - Stage 14/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-13.outputs.finished != 'true' }}
-    needs: windows-x86-build-13
+    needs: [validate-config, windows-x86-build-13]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1409,6 +1560,8 @@ jobs:
       finished: ${{ needs.windows-x86-build-13.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1418,7 +1571,7 @@ jobs:
   windows-x86-build-15:
     name: Windows x86 - Stage 15/16
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-14.outputs.finished != 'true' }}
-    needs: windows-x86-build-14
+    needs: [validate-config, windows-x86-build-14]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1429,6 +1582,8 @@ jobs:
       finished: ${{ needs.windows-x86-build-14.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1438,7 +1593,7 @@ jobs:
   windows-x86-build-16:
     name: Windows x86 - Stage 16/16 (Final)
     if: ${{ inputs.build_windows_x86 && needs.windows-x86-build-15.outputs.finished != 'true' }}
-    needs: windows-x86-build-15
+    needs: [validate-config, windows-x86-build-15]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1449,6 +1604,8 @@ jobs:
       finished: ${{ needs.windows-x86-build-15.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1473,6 +1630,10 @@ jobs:
       finished: 'false'
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      patches_public_ref: ${{ needs.validate-config.outputs.patches_public }}
+      patches_private_ref: ${{ needs.validate-config.outputs.patches_private }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1482,7 +1643,7 @@ jobs:
   macos-x64-build-2:
     name: macOS x64 - Stage 2/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-1.outputs.finished != 'true' }}
-    needs: macos-x64-build-1
+    needs: [validate-config, macos-x64-build-1]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1493,6 +1654,8 @@ jobs:
       finished: ${{ needs.macos-x64-build-1.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1502,7 +1665,7 @@ jobs:
   macos-x64-build-3:
     name: macOS x64 - Stage 3/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-2.outputs.finished != 'true' }}
-    needs: macos-x64-build-2
+    needs: [validate-config, macos-x64-build-2]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1513,6 +1676,8 @@ jobs:
       finished: ${{ needs.macos-x64-build-2.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1522,7 +1687,7 @@ jobs:
   macos-x64-build-4:
     name: macOS x64 - Stage 4/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-3.outputs.finished != 'true' }}
-    needs: macos-x64-build-3
+    needs: [validate-config, macos-x64-build-3]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1533,6 +1698,8 @@ jobs:
       finished: ${{ needs.macos-x64-build-3.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1542,7 +1709,7 @@ jobs:
   macos-x64-build-5:
     name: macOS x64 - Stage 5/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-4.outputs.finished != 'true' }}
-    needs: macos-x64-build-4
+    needs: [validate-config, macos-x64-build-4]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1553,6 +1720,8 @@ jobs:
       finished: ${{ needs.macos-x64-build-4.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1562,7 +1731,7 @@ jobs:
   macos-x64-build-6:
     name: macOS x64 - Stage 6/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-5.outputs.finished != 'true' }}
-    needs: macos-x64-build-5
+    needs: [validate-config, macos-x64-build-5]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1573,6 +1742,8 @@ jobs:
       finished: ${{ needs.macos-x64-build-5.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1582,7 +1753,7 @@ jobs:
   macos-x64-build-7:
     name: macOS x64 - Stage 7/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-6.outputs.finished != 'true' }}
-    needs: macos-x64-build-6
+    needs: [validate-config, macos-x64-build-6]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1593,6 +1764,8 @@ jobs:
       finished: ${{ needs.macos-x64-build-6.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1602,7 +1775,7 @@ jobs:
   macos-x64-build-8:
     name: macOS x64 - Stage 8/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-7.outputs.finished != 'true' }}
-    needs: macos-x64-build-7
+    needs: [validate-config, macos-x64-build-7]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1613,6 +1786,8 @@ jobs:
       finished: ${{ needs.macos-x64-build-7.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1622,7 +1797,7 @@ jobs:
   macos-x64-build-9:
     name: macOS x64 - Stage 9/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-8.outputs.finished != 'true' }}
-    needs: macos-x64-build-8
+    needs: [validate-config, macos-x64-build-8]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1633,6 +1808,8 @@ jobs:
       finished: ${{ needs.macos-x64-build-8.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1642,7 +1819,7 @@ jobs:
   macos-x64-build-10:
     name: macOS x64 - Stage 10/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-9.outputs.finished != 'true' }}
-    needs: macos-x64-build-9
+    needs: [validate-config, macos-x64-build-9]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1653,6 +1830,8 @@ jobs:
       finished: ${{ needs.macos-x64-build-9.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1662,7 +1841,7 @@ jobs:
   macos-x64-build-11:
     name: macOS x64 - Stage 11/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-10.outputs.finished != 'true' }}
-    needs: macos-x64-build-10
+    needs: [validate-config, macos-x64-build-10]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1673,6 +1852,8 @@ jobs:
       finished: ${{ needs.macos-x64-build-10.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1682,7 +1863,7 @@ jobs:
   macos-x64-build-12:
     name: macOS x64 - Stage 12/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-11.outputs.finished != 'true' }}
-    needs: macos-x64-build-11
+    needs: [validate-config, macos-x64-build-11]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1693,6 +1874,8 @@ jobs:
       finished: ${{ needs.macos-x64-build-11.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1702,7 +1885,7 @@ jobs:
   macos-x64-build-13:
     name: macOS x64 - Stage 13/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-12.outputs.finished != 'true' }}
-    needs: macos-x64-build-12
+    needs: [validate-config, macos-x64-build-12]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1713,6 +1896,8 @@ jobs:
       finished: ${{ needs.macos-x64-build-12.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1722,7 +1907,7 @@ jobs:
   macos-x64-build-14:
     name: macOS x64 - Stage 14/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-13.outputs.finished != 'true' }}
-    needs: macos-x64-build-13
+    needs: [validate-config, macos-x64-build-13]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1733,6 +1918,8 @@ jobs:
       finished: ${{ needs.macos-x64-build-13.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1742,7 +1929,7 @@ jobs:
   macos-x64-build-15:
     name: macOS x64 - Stage 15/16
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-14.outputs.finished != 'true' }}
-    needs: macos-x64-build-14
+    needs: [validate-config, macos-x64-build-14]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1753,6 +1940,8 @@ jobs:
       finished: ${{ needs.macos-x64-build-14.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1762,7 +1951,7 @@ jobs:
   macos-x64-build-16:
     name: macOS x64 - Stage 16/16 (Final)
     if: ${{ inputs.build_macos_x64 && needs.macos-x64-build-15.outputs.finished != 'true' }}
-    needs: macos-x64-build-15
+    needs: [validate-config, macos-x64-build-15]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1773,6 +1962,8 @@ jobs:
       finished: ${{ needs.macos-x64-build-15.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1797,6 +1988,10 @@ jobs:
       finished: 'false'
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      patches_public_ref: ${{ needs.validate-config.outputs.patches_public }}
+      patches_private_ref: ${{ needs.validate-config.outputs.patches_private }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1806,7 +2001,7 @@ jobs:
   macos-arm64-build-2:
     name: macOS arm64 - Stage 2/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-1.outputs.finished != 'true' }}
-    needs: macos-arm64-build-1
+    needs: [validate-config, macos-arm64-build-1]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1817,6 +2012,8 @@ jobs:
       finished: ${{ needs.macos-arm64-build-1.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1826,7 +2023,7 @@ jobs:
   macos-arm64-build-3:
     name: macOS arm64 - Stage 3/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-2.outputs.finished != 'true' }}
-    needs: macos-arm64-build-2
+    needs: [validate-config, macos-arm64-build-2]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1837,6 +2034,8 @@ jobs:
       finished: ${{ needs.macos-arm64-build-2.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1846,7 +2045,7 @@ jobs:
   macos-arm64-build-4:
     name: macOS arm64 - Stage 4/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-3.outputs.finished != 'true' }}
-    needs: macos-arm64-build-3
+    needs: [validate-config, macos-arm64-build-3]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1857,6 +2056,8 @@ jobs:
       finished: ${{ needs.macos-arm64-build-3.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1866,7 +2067,7 @@ jobs:
   macos-arm64-build-5:
     name: macOS arm64 - Stage 5/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-4.outputs.finished != 'true' }}
-    needs: macos-arm64-build-4
+    needs: [validate-config, macos-arm64-build-4]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1877,6 +2078,8 @@ jobs:
       finished: ${{ needs.macos-arm64-build-4.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1886,7 +2089,7 @@ jobs:
   macos-arm64-build-6:
     name: macOS arm64 - Stage 6/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-5.outputs.finished != 'true' }}
-    needs: macos-arm64-build-5
+    needs: [validate-config, macos-arm64-build-5]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1897,6 +2100,8 @@ jobs:
       finished: ${{ needs.macos-arm64-build-5.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1906,7 +2111,7 @@ jobs:
   macos-arm64-build-7:
     name: macOS arm64 - Stage 7/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-6.outputs.finished != 'true' }}
-    needs: macos-arm64-build-6
+    needs: [validate-config, macos-arm64-build-6]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1917,6 +2122,8 @@ jobs:
       finished: ${{ needs.macos-arm64-build-6.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1926,7 +2133,7 @@ jobs:
   macos-arm64-build-8:
     name: macOS arm64 - Stage 8/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-7.outputs.finished != 'true' }}
-    needs: macos-arm64-build-7
+    needs: [validate-config, macos-arm64-build-7]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1937,6 +2144,8 @@ jobs:
       finished: ${{ needs.macos-arm64-build-7.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1946,7 +2155,7 @@ jobs:
   macos-arm64-build-9:
     name: macOS arm64 - Stage 9/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-8.outputs.finished != 'true' }}
-    needs: macos-arm64-build-8
+    needs: [validate-config, macos-arm64-build-8]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1957,6 +2166,8 @@ jobs:
       finished: ${{ needs.macos-arm64-build-8.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1966,7 +2177,7 @@ jobs:
   macos-arm64-build-10:
     name: macOS arm64 - Stage 10/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-9.outputs.finished != 'true' }}
-    needs: macos-arm64-build-9
+    needs: [validate-config, macos-arm64-build-9]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1977,6 +2188,8 @@ jobs:
       finished: ${{ needs.macos-arm64-build-9.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -1986,7 +2199,7 @@ jobs:
   macos-arm64-build-11:
     name: macOS arm64 - Stage 11/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-10.outputs.finished != 'true' }}
-    needs: macos-arm64-build-10
+    needs: [validate-config, macos-arm64-build-10]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -1997,6 +2210,8 @@ jobs:
       finished: ${{ needs.macos-arm64-build-10.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2006,7 +2221,7 @@ jobs:
   macos-arm64-build-12:
     name: macOS arm64 - Stage 12/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-11.outputs.finished != 'true' }}
-    needs: macos-arm64-build-11
+    needs: [validate-config, macos-arm64-build-11]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2017,6 +2232,8 @@ jobs:
       finished: ${{ needs.macos-arm64-build-11.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2026,7 +2243,7 @@ jobs:
   macos-arm64-build-13:
     name: macOS arm64 - Stage 13/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-12.outputs.finished != 'true' }}
-    needs: macos-arm64-build-12
+    needs: [validate-config, macos-arm64-build-12]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2037,6 +2254,8 @@ jobs:
       finished: ${{ needs.macos-arm64-build-12.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2046,7 +2265,7 @@ jobs:
   macos-arm64-build-14:
     name: macOS arm64 - Stage 14/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-13.outputs.finished != 'true' }}
-    needs: macos-arm64-build-13
+    needs: [validate-config, macos-arm64-build-13]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2057,6 +2276,8 @@ jobs:
       finished: ${{ needs.macos-arm64-build-13.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2066,7 +2287,7 @@ jobs:
   macos-arm64-build-15:
     name: macOS arm64 - Stage 15/16
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-14.outputs.finished != 'true' }}
-    needs: macos-arm64-build-14
+    needs: [validate-config, macos-arm64-build-14]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2077,6 +2298,8 @@ jobs:
       finished: ${{ needs.macos-arm64-build-14.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2086,7 +2309,7 @@ jobs:
   macos-arm64-build-16:
     name: macOS arm64 - Stage 16/16 (Final)
     if: ${{ inputs.build_macos_arm64 && needs.macos-arm64-build-15.outputs.finished != 'true' }}
-    needs: macos-arm64-build-15
+    needs: [validate-config, macos-arm64-build-15]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2097,6 +2320,8 @@ jobs:
       finished: ${{ needs.macos-arm64-build-15.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2121,6 +2346,10 @@ jobs:
       finished: 'false'
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      patches_public_ref: ${{ needs.validate-config.outputs.patches_public }}
+      patches_private_ref: ${{ needs.validate-config.outputs.patches_private }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2130,7 +2359,7 @@ jobs:
   linux-arm64-build-2:
     name: Linux arm64 - Stage 2/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-1.outputs.finished != 'true' }}
-    needs: linux-arm64-build-1
+    needs: [validate-config, linux-arm64-build-1]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2141,6 +2370,8 @@ jobs:
       finished: ${{ needs.linux-arm64-build-1.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2150,7 +2381,7 @@ jobs:
   linux-arm64-build-3:
     name: Linux arm64 - Stage 3/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-2.outputs.finished != 'true' }}
-    needs: linux-arm64-build-2
+    needs: [validate-config, linux-arm64-build-2]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2161,6 +2392,8 @@ jobs:
       finished: ${{ needs.linux-arm64-build-2.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2170,7 +2403,7 @@ jobs:
   linux-arm64-build-4:
     name: Linux arm64 - Stage 4/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-3.outputs.finished != 'true' }}
-    needs: linux-arm64-build-3
+    needs: [validate-config, linux-arm64-build-3]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2181,6 +2414,8 @@ jobs:
       finished: ${{ needs.linux-arm64-build-3.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2190,7 +2425,7 @@ jobs:
   linux-arm64-build-5:
     name: Linux arm64 - Stage 5/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-4.outputs.finished != 'true' }}
-    needs: linux-arm64-build-4
+    needs: [validate-config, linux-arm64-build-4]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2201,6 +2436,8 @@ jobs:
       finished: ${{ needs.linux-arm64-build-4.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2210,7 +2447,7 @@ jobs:
   linux-arm64-build-6:
     name: Linux arm64 - Stage 6/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-5.outputs.finished != 'true' }}
-    needs: linux-arm64-build-5
+    needs: [validate-config, linux-arm64-build-5]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2221,6 +2458,8 @@ jobs:
       finished: ${{ needs.linux-arm64-build-5.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2230,7 +2469,7 @@ jobs:
   linux-arm64-build-7:
     name: Linux arm64 - Stage 7/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-6.outputs.finished != 'true' }}
-    needs: linux-arm64-build-6
+    needs: [validate-config, linux-arm64-build-6]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2241,6 +2480,8 @@ jobs:
       finished: ${{ needs.linux-arm64-build-6.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2250,7 +2491,7 @@ jobs:
   linux-arm64-build-8:
     name: Linux arm64 - Stage 8/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-7.outputs.finished != 'true' }}
-    needs: linux-arm64-build-7
+    needs: [validate-config, linux-arm64-build-7]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2261,6 +2502,8 @@ jobs:
       finished: ${{ needs.linux-arm64-build-7.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2270,7 +2513,7 @@ jobs:
   linux-arm64-build-9:
     name: Linux arm64 - Stage 9/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-8.outputs.finished != 'true' }}
-    needs: linux-arm64-build-8
+    needs: [validate-config, linux-arm64-build-8]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2281,6 +2524,8 @@ jobs:
       finished: ${{ needs.linux-arm64-build-8.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2290,7 +2535,7 @@ jobs:
   linux-arm64-build-10:
     name: Linux arm64 - Stage 10/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-9.outputs.finished != 'true'  }}
-    needs: linux-arm64-build-9
+    needs: [validate-config, linux-arm64-build-9]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2301,6 +2546,8 @@ jobs:
       finished: ${{ needs.linux-arm64-build-9.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2310,7 +2557,7 @@ jobs:
   linux-arm64-build-11:
     name: Linux arm64 - Stage 11/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-10.outputs.finished != 'true' }}
-    needs: linux-arm64-build-10
+    needs: [validate-config, linux-arm64-build-10]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2321,6 +2568,8 @@ jobs:
       finished: ${{ needs.linux-arm64-build-10.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2330,7 +2579,7 @@ jobs:
   linux-arm64-build-12:
     name: Linux arm64 - Stage 12/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-11.outputs.finished != 'true' }}
-    needs: linux-arm64-build-11
+    needs: [validate-config, linux-arm64-build-11]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2341,6 +2590,8 @@ jobs:
       finished: ${{ needs.linux-arm64-build-11.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2350,7 +2601,7 @@ jobs:
   linux-arm64-build-13:
     name: Linux arm64 - Stage 13/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-12.outputs.finished != 'true' }}
-    needs: linux-arm64-build-12
+    needs: [validate-config, linux-arm64-build-12]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2361,6 +2612,8 @@ jobs:
       finished: ${{ needs.linux-arm64-build-12.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2370,7 +2623,7 @@ jobs:
   linux-arm64-build-14:
     name: Linux arm64 - Stage 14/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-13.outputs.finished != 'true' }}
-    needs: linux-arm64-build-13
+    needs: [validate-config, linux-arm64-build-13]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2381,6 +2634,8 @@ jobs:
       finished: ${{ needs.linux-arm64-build-13.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2390,7 +2645,7 @@ jobs:
   linux-arm64-build-15:
     name: Linux arm64 - Stage 15/16
     if: ${{ inputs.build_linux_arm64 && needs.linux-arm64-build-14.outputs.finished != 'true' }}
-    needs: linux-arm64-build-14
+    needs: [validate-config, linux-arm64-build-14]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2401,6 +2656,8 @@ jobs:
       finished: ${{ needs.linux-arm64-build-14.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}
@@ -2410,7 +2667,7 @@ jobs:
   linux-arm64-build-16:
     name: Linux arm64 - Stage 16/16 (Final)
     if: ${{ inputs.build_linux_arm64  && needs.linux-arm64-build-15.outputs.finished != 'true' }}
-    needs: linux-arm64-build-15
+    needs: [validate-config, linux-arm64-build-15]
     uses: ./.github/workflows/builder.yml
     with:
       environment: ${{ inputs.environment }}
@@ -2421,6 +2678,8 @@ jobs:
       finished: ${{ needs.linux-arm64-build-15.outputs.finished }}
       build_type: Release
       run_id: ${{ github.run_id }}
+      build_system_ref: ${{ needs.validate-config.outputs.build_system }}
+      brave_version: ${{ needs.validate-config.outputs.brave_version }}
     secrets:
       PRIVATE_REPO_PAT: ${{ secrets.PRIVATE_REPO_PAT }}
       BRAVE_ENV_CONFIG: ${{ secrets.BRAVE_ENV_CONFIG }}

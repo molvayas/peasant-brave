@@ -36,6 +36,22 @@ on:
         description: 'Deployment environment for accessing environment-specific secrets'
         required: false
         type: string
+      build_system_ref:
+        description: 'Git ref for build system repository (from validate-config)'
+        required: false
+        type: string
+      patches_public_ref:
+        description: 'Git ref for public patches repository (from validate-config)'
+        required: false
+        type: string
+      patches_private_ref:
+        description: 'Git ref for private patches repository (from validate-config)'
+        required: false
+        type: string
+      brave_version:
+        description: 'Brave version to build (from validate-config, overrides versions.txt)'
+        required: false
+        type: string
     secrets:
       PRIVATE_REPO_PAT:
         description: 'PAT for accessing private repositories (patches, etc.)'
@@ -90,21 +106,23 @@ jobs:
           fi
       
       # Checkout private build system with version tag
+      # Uses input from caller (validate-config outputs), falls back to versions.txt for direct calls
       - name: Checkout build system (private)
         uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/peasant-build-system
-          ref: ${{ steps.versions.outputs.build_system || 'main' }}
+          ref: ${{ inputs.build_system_ref || steps.versions.outputs.build_system || 'main' }}
           token: ${{ secrets.PRIVATE_REPO_PAT }}
           path: build-system
       
       # Checkout patch repositories (only needed for init stage, not when resuming)
+      # Uses input from caller (validate-config outputs), falls back to versions.txt for direct calls
       - name: Checkout public patches (MPL)
         if: ${{ !inputs.from_artifact }}
         uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/peasant-patches-mpl
-          ref: ${{ steps.versions.outputs.patches_public || 'main' }}
+          ref: ${{ inputs.patches_public_ref || steps.versions.outputs.patches_public || 'main' }}
           path: patches-public
       
       - name: Checkout private patches
@@ -112,7 +130,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/peasant-patches-private
-          ref: ${{ steps.versions.outputs.patches_private || 'main' }}
+          ref: ${{ inputs.patches_private_ref || steps.versions.outputs.patches_private || 'main' }}
           token: ${{ secrets.PRIVATE_REPO_PAT }}
           path: patches-private
       
@@ -145,6 +163,7 @@ jobs:
           run_id: ${{ inputs.run_id }}
           build_type: ${{ inputs.build_type }}
           env_config: ${{ secrets.BRAVE_ENV_CONFIG }}
+          brave_version: ${{ inputs.brave_version }}
       
     
     outputs:
