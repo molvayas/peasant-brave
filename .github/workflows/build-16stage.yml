@@ -166,19 +166,85 @@ jobs:
           [ -z "$PATCHES_PUBLIC" ] && PATCHES_PUBLIC="main"
           [ -z "$PATCHES_PRIVATE" ] && PATCHES_PRIVATE="main"
           
+          echo ""
+          echo "=== Freezing commits (resolving refs to SHAs) ==="
+          echo "This ensures all stages use the exact same commits even if branches move during the build."
+          echo ""
+          
+          # Helper function to resolve a ref to commit SHA
+          # If the ref is already a full SHA (40 hex chars), use it as-is
+          # Otherwise, use git ls-remote to resolve branch/tag to SHA
+          resolve_ref() {
+            local repo_url="$1"
+            local ref="$2"
+            local repo_name="$3"
+            
+            # Check if already a commit SHA (40 hex characters)
+            if [[ "$ref" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "$ref"
+              return 0
+            fi
+            
+            # Try to resolve via git ls-remote
+            local sha
+            sha=$(git ls-remote "$repo_url" "$ref" 2>/dev/null | head -1 | cut -f1)
+            
+            if [ -n "$sha" ]; then
+              echo "$sha"
+              return 0
+            fi
+            
+            # Try with refs/heads/ prefix for branches
+            sha=$(git ls-remote "$repo_url" "refs/heads/$ref" 2>/dev/null | head -1 | cut -f1)
+            if [ -n "$sha" ]; then
+              echo "$sha"
+              return 0
+            fi
+            
+            # Try with refs/tags/ prefix for tags
+            sha=$(git ls-remote "$repo_url" "refs/tags/$ref" 2>/dev/null | head -1 | cut -f1)
+            if [ -n "$sha" ]; then
+              echo "$sha"
+              return 0
+            fi
+            
+            # Fallback: return the original ref (might be a short SHA or special ref)
+            echo "$ref"
+          }
+          
+          # Repository URLs
+          OWNER="${{ github.repository_owner }}"
+          BUILD_SYSTEM_URL="https://${{ secrets.PRIVATE_REPO_PAT }}@github.com/${OWNER}/peasant-build-system.git"
+          PATCHES_PUBLIC_URL="https://github.com/${OWNER}/peasant-patches-mpl.git"
+          PATCHES_PRIVATE_URL="https://${{ secrets.PRIVATE_REPO_PAT }}@github.com/${OWNER}/peasant-patches-private.git"
+          
+          # Resolve refs to commit SHAs (freeze the commits)
+          echo "Resolving build_system: $BUILD_SYSTEM"
+          BUILD_SYSTEM_SHA=$(resolve_ref "$BUILD_SYSTEM_URL" "$BUILD_SYSTEM" "build-system")
+          echo "  → $BUILD_SYSTEM_SHA"
+          
+          echo "Resolving patches_public: $PATCHES_PUBLIC"
+          PATCHES_PUBLIC_SHA=$(resolve_ref "$PATCHES_PUBLIC_URL" "$PATCHES_PUBLIC" "patches-public")
+          echo "  → $PATCHES_PUBLIC_SHA"
+          
+          echo "Resolving patches_private: $PATCHES_PRIVATE"
+          PATCHES_PRIVATE_SHA=$(resolve_ref "$PATCHES_PRIVATE_URL" "$PATCHES_PRIVATE" "patches-private")
+          echo "  → $PATCHES_PRIVATE_SHA"
+          
+          # Output the frozen commit SHAs (or original ref if resolution failed)
           echo "brave_version=$BRAVE_VERSION" >> $GITHUB_OUTPUT
-          echo "build_system=$BUILD_SYSTEM" >> $GITHUB_OUTPUT
-          echo "patches_public=$PATCHES_PUBLIC" >> $GITHUB_OUTPUT
-          echo "patches_private=$PATCHES_PRIVATE" >> $GITHUB_OUTPUT
+          echo "build_system=$BUILD_SYSTEM_SHA" >> $GITHUB_OUTPUT
+          echo "patches_public=$PATCHES_PUBLIC_SHA" >> $GITHUB_OUTPUT
+          echo "patches_private=$PATCHES_PRIVATE_SHA" >> $GITHUB_OUTPUT
           
           echo ""
-          echo "=== Versions to be used by builder jobs ==="
+          echo "=== Frozen versions for this build run ==="
           echo "  brave_version=$BRAVE_VERSION"
-          echo "  build_system=$BUILD_SYSTEM"
-          echo "  patches_public=$PATCHES_PUBLIC"
-          echo "  patches_private=$PATCHES_PRIVATE"
+          echo "  build_system=$BUILD_SYSTEM → $BUILD_SYSTEM_SHA"
+          echo "  patches_public=$PATCHES_PUBLIC → $PATCHES_PUBLIC_SHA"
+          echo "  patches_private=$PATCHES_PRIVATE → $PATCHES_PRIVATE_SHA"
           echo ""
-          echo "✓ Validation complete"
+          echo "✓ Commits frozen - all stages will use these exact commits"
 
   # ============================================================================
   # Linux x64 Build Chain (16 stages)
