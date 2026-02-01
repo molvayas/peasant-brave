@@ -214,18 +214,21 @@ jobs:
             echo "$ref"
           }
           
-          # Repository URLs (using PRIVATE_REPO_PAT env var for private repos)
+          # Configure git authentication for private repos (same method as actions/checkout)
           OWNER="${{ github.repository_owner }}"
           
-          if [ -z "$PRIVATE_REPO_PAT" ]; then
-            echo "⚠️  WARNING: PRIVATE_REPO_PAT not set - private repo commits cannot be frozen"
-            BUILD_SYSTEM_URL="https://github.com/${OWNER}/peasant-build-system.git"
-            PATCHES_PRIVATE_URL="https://github.com/${OWNER}/peasant-patches-private.git"
+          if [ -n "$PRIVATE_REPO_PAT" ]; then
+            # Configure git to use PAT for all GitHub HTTPS URLs
+            git config --global url."https://x-access-token:${PRIVATE_REPO_PAT}@github.com/".insteadOf "https://github.com/"
+            echo "✓ Git credentials configured for private repos"
           else
-            BUILD_SYSTEM_URL="https://${PRIVATE_REPO_PAT}@github.com/${OWNER}/peasant-build-system.git"
-            PATCHES_PRIVATE_URL="https://${PRIVATE_REPO_PAT}@github.com/${OWNER}/peasant-patches-private.git"
+            echo "⚠️  WARNING: PRIVATE_REPO_PAT not set - private repo commits cannot be frozen"
           fi
+          
+          # Repository URLs (git will automatically add auth via config above)
+          BUILD_SYSTEM_URL="https://github.com/${OWNER}/peasant-build-system.git"
           PATCHES_PUBLIC_URL="https://github.com/${OWNER}/peasant-patches-mpl.git"
+          PATCHES_PRIVATE_URL="https://github.com/${OWNER}/peasant-patches-private.git"
           
           # Resolve refs to commit SHAs (freeze the commits)
           echo "PAT available: $([ -n "$PRIVATE_REPO_PAT" ] && echo 'yes' || echo 'no')"
