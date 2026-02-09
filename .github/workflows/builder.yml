@@ -73,7 +73,6 @@ on:
 jobs:
   build:
     runs-on: ${{ inputs.platform == 'linux' && 'ubuntu-22.04' || inputs.platform == 'macos' && 'macos-latest' || 'windows-2022' }}
-    environment: ${{ inputs.environment != '' && inputs.environment || null }}
     
     steps:
       # Checkout main repo (for versions.txt)

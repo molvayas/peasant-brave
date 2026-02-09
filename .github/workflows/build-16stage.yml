@@ -61,12 +61,13 @@ jobs:
   validate-config:
     name: 🔍 Validate Configuration
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
     outputs:
       brave_version: ${{ steps.validate.outputs.brave_version }}
       build_system: ${{ steps.validate.outputs.build_system }}
       patches_public: ${{ steps.validate.outputs.patches_public }}
       patches_private: ${{ steps.validate.outputs.patches_private }}
+      allow_publish_release: ${{ steps.validate.outputs.allow_publish_release }}
+      environment: ${{ steps.validate.outputs.environment }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -79,7 +80,29 @@ jobs:
           echo "=== Version Configuration Validation ==="
           
           VERSION_OVERRIDE="${{ inputs.version_override }}"
-          ALLOW_RELEASE="${{ vars.ALLOW_PUBLISH_RELEASE }}"
+          PUBLISH_REQUESTED="${{ inputs.publish_release }}"
+          
+          # Derive allow_publish from environment name: 'release' = allowed, anything else = blocked
+          if [ "${{ inputs.environment }}" = "release" ]; then
+            ALLOW_RELEASE="true"
+          else
+            ALLOW_RELEASE="false"
+          fi
+          echo "Environment: ${{ inputs.environment }} → allow_publish_release=$ALLOW_RELEASE"
+          
+          # Block early if publish requested but environment doesn't allow it
+          if [ "$PUBLISH_REQUESTED" = "true" ] && [ "$ALLOW_RELEASE" != "true" ]; then
+            echo "=========================================="
+            echo "FATAL: Release publishing is BLOCKED!"
+            echo ""
+            echo "publish_release=true was requested, but"
+            echo "environment is '${{ inputs.environment }}', not 'release'."
+            echo ""
+            echo "Select the 'release' environment to publish,"
+            echo "or uncheck publish_release for test builds."
+            echo "=========================================="
+            exit 1
+          fi
           
           # Check if override is provided
           if [ -n "$VERSION_OVERRIDE" ]; then
@@ -272,6 +295,8 @@ jobs:
           echo "build_system=$BUILD_SYSTEM_SHA" >> $GITHUB_OUTPUT
           echo "patches_public=$PATCHES_PUBLIC_SHA" >> $GITHUB_OUTPUT
           echo "patches_private=$PATCHES_PRIVATE_SHA" >> $GITHUB_OUTPUT
+          echo "allow_publish_release=$ALLOW_RELEASE" >> $GITHUB_OUTPUT
+          echo "environment=${{ inputs.environment }}" >> $GITHUB_OUTPUT
           
           echo ""
           echo "=== Frozen versions for this build run ==="
@@ -292,7 +317,6 @@ jobs:
     if: ${{ inputs.build_linux_x64 }}
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 1
@@ -316,7 +340,6 @@ jobs:
     needs: [validate-config, linux-x64-build-1]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 2
@@ -338,7 +361,6 @@ jobs:
     needs: [validate-config, linux-x64-build-2]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 3
@@ -360,7 +382,6 @@ jobs:
     needs: [validate-config, linux-x64-build-3]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 4
@@ -382,7 +403,6 @@ jobs:
     needs: [validate-config, linux-x64-build-4]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 5
@@ -404,7 +424,6 @@ jobs:
     needs: [validate-config, linux-x64-build-5]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 6
@@ -426,7 +445,6 @@ jobs:
     needs: [validate-config, linux-x64-build-6]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 7
@@ -448,7 +466,6 @@ jobs:
     needs: [validate-config, linux-x64-build-7]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 8
@@ -470,7 +487,6 @@ jobs:
     needs: [validate-config, linux-x64-build-8]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 9
@@ -492,7 +508,6 @@ jobs:
     needs: [validate-config, linux-x64-build-9]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 10
@@ -514,7 +529,6 @@ jobs:
     needs: [validate-config, linux-x64-build-10]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 11
@@ -536,7 +550,6 @@ jobs:
     needs: [validate-config, linux-x64-build-11]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 12
@@ -558,7 +571,6 @@ jobs:
     needs: [validate-config, linux-x64-build-12]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 13
@@ -580,7 +592,6 @@ jobs:
     needs: [validate-config, linux-x64-build-13]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 14
@@ -602,7 +613,6 @@ jobs:
     needs: [validate-config, linux-x64-build-14]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 15
@@ -624,7 +634,6 @@ jobs:
     needs: [validate-config, linux-x64-build-15]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: x64
       stage: 16
@@ -650,7 +659,6 @@ jobs:
     if: ${{ inputs.build_windows_x64 }}
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 1
@@ -674,7 +682,6 @@ jobs:
     needs: [validate-config, windows-x64-build-1]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 2
@@ -696,7 +703,6 @@ jobs:
     needs: [validate-config, windows-x64-build-2]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 3
@@ -718,7 +724,6 @@ jobs:
     needs: [validate-config, windows-x64-build-3]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 4
@@ -740,7 +745,6 @@ jobs:
     needs: [validate-config, windows-x64-build-4]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 5
@@ -762,7 +766,6 @@ jobs:
     needs: [validate-config, windows-x64-build-5]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 6
@@ -784,7 +787,6 @@ jobs:
     needs: [validate-config, windows-x64-build-6]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 7
@@ -806,7 +808,6 @@ jobs:
     needs: [validate-config, windows-x64-build-7]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 8
@@ -828,7 +829,6 @@ jobs:
     needs: [validate-config, windows-x64-build-8]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 9
@@ -850,7 +850,6 @@ jobs:
     needs: [validate-config, windows-x64-build-9]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 10
@@ -872,7 +871,6 @@ jobs:
     needs: [validate-config, windows-x64-build-10]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 11
@@ -894,7 +892,6 @@ jobs:
     needs: [validate-config, windows-x64-build-11]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 12
@@ -916,7 +913,6 @@ jobs:
     needs: [validate-config, windows-x64-build-12]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 13
@@ -938,7 +934,6 @@ jobs:
     needs: [validate-config, windows-x64-build-13]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 14
@@ -960,7 +955,6 @@ jobs:
     needs: [validate-config, windows-x64-build-14]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 15
@@ -982,7 +976,6 @@ jobs:
     needs: [validate-config, windows-x64-build-15]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x64
       stage: 16
@@ -1008,7 +1001,6 @@ jobs:
     if: ${{ inputs.build_windows_arm64 }}
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 1
@@ -1032,7 +1024,6 @@ jobs:
     needs: [validate-config, windows-arm64-build-1]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 2
@@ -1054,7 +1045,6 @@ jobs:
     needs: [validate-config, windows-arm64-build-2]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 3
@@ -1076,7 +1066,6 @@ jobs:
     needs: [validate-config, windows-arm64-build-3]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 4
@@ -1098,7 +1087,6 @@ jobs:
     needs: [validate-config, windows-arm64-build-4]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 5
@@ -1120,7 +1108,6 @@ jobs:
     needs: [validate-config, windows-arm64-build-5]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 6
@@ -1142,7 +1129,6 @@ jobs:
     needs: [validate-config, windows-arm64-build-6]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 7
@@ -1164,7 +1150,6 @@ jobs:
     needs: [validate-config, windows-arm64-build-7]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 8
@@ -1186,7 +1171,6 @@ jobs:
     needs: [validate-config, windows-arm64-build-8]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 9
@@ -1208,7 +1192,6 @@ jobs:
     needs: [validate-config, windows-arm64-build-9]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 10
@@ -1230,7 +1213,6 @@ jobs:
     needs: [validate-config, windows-arm64-build-10]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 11
@@ -1252,7 +1234,6 @@ jobs:
     needs: [validate-config, windows-arm64-build-11]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 12
@@ -1274,7 +1255,6 @@ jobs:
     needs: [validate-config, windows-arm64-build-12]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 13
@@ -1296,7 +1276,6 @@ jobs:
     needs: [validate-config, windows-arm64-build-13]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 14
@@ -1318,7 +1297,6 @@ jobs:
     needs: [validate-config, windows-arm64-build-14]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 15
@@ -1340,7 +1318,6 @@ jobs:
     needs: [validate-config, windows-arm64-build-15]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: arm64
       stage: 16
@@ -1366,7 +1343,6 @@ jobs:
     if: ${{ inputs.build_windows_x86 }}
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 1
@@ -1390,7 +1366,6 @@ jobs:
     needs: [validate-config, windows-x86-build-1]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 2
@@ -1412,7 +1387,6 @@ jobs:
     needs: [validate-config, windows-x86-build-2]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 3
@@ -1434,7 +1408,6 @@ jobs:
     needs: [validate-config, windows-x86-build-3]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 4
@@ -1456,7 +1429,6 @@ jobs:
     needs: [validate-config, windows-x86-build-4]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 5
@@ -1478,7 +1450,6 @@ jobs:
     needs: [validate-config, windows-x86-build-5]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 6
@@ -1500,7 +1471,6 @@ jobs:
     needs: [validate-config, windows-x86-build-6]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 7
@@ -1522,7 +1492,6 @@ jobs:
     needs: [validate-config, windows-x86-build-7]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 8
@@ -1544,7 +1513,6 @@ jobs:
     needs: [validate-config, windows-x86-build-8]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 9
@@ -1566,7 +1534,6 @@ jobs:
     needs: [validate-config, windows-x86-build-9]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 10
@@ -1588,7 +1555,6 @@ jobs:
     needs: [validate-config, windows-x86-build-10]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 11
@@ -1610,7 +1576,6 @@ jobs:
     needs: [validate-config, windows-x86-build-11]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 12
@@ -1632,7 +1597,6 @@ jobs:
     needs: [validate-config, windows-x86-build-12]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 13
@@ -1654,7 +1618,6 @@ jobs:
     needs: [validate-config, windows-x86-build-13]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 14
@@ -1676,7 +1639,6 @@ jobs:
     needs: [validate-config, windows-x86-build-14]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 15
@@ -1698,7 +1660,6 @@ jobs:
     needs: [validate-config, windows-x86-build-15]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: windows
       arch: x86
       stage: 16
@@ -1724,7 +1685,6 @@ jobs:
     if: ${{ inputs.build_macos_x64 }}
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 1
@@ -1748,7 +1708,6 @@ jobs:
     needs: [validate-config, macos-x64-build-1]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 2
@@ -1770,7 +1729,6 @@ jobs:
     needs: [validate-config, macos-x64-build-2]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 3
@@ -1792,7 +1750,6 @@ jobs:
     needs: [validate-config, macos-x64-build-3]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 4
@@ -1814,7 +1771,6 @@ jobs:
     needs: [validate-config, macos-x64-build-4]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 5
@@ -1836,7 +1792,6 @@ jobs:
     needs: [validate-config, macos-x64-build-5]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 6
@@ -1858,7 +1813,6 @@ jobs:
     needs: [validate-config, macos-x64-build-6]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 7
@@ -1880,7 +1834,6 @@ jobs:
     needs: [validate-config, macos-x64-build-7]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 8
@@ -1902,7 +1855,6 @@ jobs:
     needs: [validate-config, macos-x64-build-8]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 9
@@ -1924,7 +1876,6 @@ jobs:
     needs: [validate-config, macos-x64-build-9]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 10
@@ -1946,7 +1897,6 @@ jobs:
     needs: [validate-config, macos-x64-build-10]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 11
@@ -1968,7 +1918,6 @@ jobs:
     needs: [validate-config, macos-x64-build-11]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 12
@@ -1990,7 +1939,6 @@ jobs:
     needs: [validate-config, macos-x64-build-12]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 13
@@ -2012,7 +1960,6 @@ jobs:
     needs: [validate-config, macos-x64-build-13]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 14
@@ -2034,7 +1981,6 @@ jobs:
     needs: [validate-config, macos-x64-build-14]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 15
@@ -2056,7 +2002,6 @@ jobs:
     needs: [validate-config, macos-x64-build-15]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: x64
       stage: 16
@@ -2082,7 +2027,6 @@ jobs:
     if: ${{ inputs.build_macos_arm64 }}
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 1
@@ -2106,7 +2050,6 @@ jobs:
     needs: [validate-config, macos-arm64-build-1]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 2
@@ -2128,7 +2071,6 @@ jobs:
     needs: [validate-config, macos-arm64-build-2]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 3
@@ -2150,7 +2092,6 @@ jobs:
     needs: [validate-config, macos-arm64-build-3]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 4
@@ -2172,7 +2113,6 @@ jobs:
     needs: [validate-config, macos-arm64-build-4]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 5
@@ -2194,7 +2134,6 @@ jobs:
     needs: [validate-config, macos-arm64-build-5]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 6
@@ -2216,7 +2155,6 @@ jobs:
     needs: [validate-config, macos-arm64-build-6]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 7
@@ -2238,7 +2176,6 @@ jobs:
     needs: [validate-config, macos-arm64-build-7]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 8
@@ -2260,7 +2197,6 @@ jobs:
     needs: [validate-config, macos-arm64-build-8]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 9
@@ -2282,7 +2218,6 @@ jobs:
     needs: [validate-config, macos-arm64-build-9]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 10
@@ -2304,7 +2239,6 @@ jobs:
     needs: [validate-config, macos-arm64-build-10]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 11
@@ -2326,7 +2260,6 @@ jobs:
     needs: [validate-config, macos-arm64-build-11]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 12
@@ -2348,7 +2281,6 @@ jobs:
     needs: [validate-config, macos-arm64-build-12]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 13
@@ -2370,7 +2302,6 @@ jobs:
     needs: [validate-config, macos-arm64-build-13]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 14
@@ -2392,7 +2323,6 @@ jobs:
     needs: [validate-config, macos-arm64-build-14]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 15
@@ -2414,7 +2344,6 @@ jobs:
     needs: [validate-config, macos-arm64-build-15]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: macos
       arch: arm64
       stage: 16
@@ -2440,7 +2369,6 @@ jobs:
     if: ${{ inputs.build_linux_arm64 }}
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 1
@@ -2464,7 +2392,6 @@ jobs:
     needs: [validate-config, linux-arm64-build-1]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 2
@@ -2486,7 +2413,6 @@ jobs:
     needs: [validate-config, linux-arm64-build-2]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 3
@@ -2508,7 +2434,6 @@ jobs:
     needs: [validate-config, linux-arm64-build-3]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 4
@@ -2530,7 +2455,6 @@ jobs:
     needs: [validate-config, linux-arm64-build-4]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 5
@@ -2552,7 +2476,6 @@ jobs:
     needs: [validate-config, linux-arm64-build-5]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 6
@@ -2574,7 +2497,6 @@ jobs:
     needs: [validate-config, linux-arm64-build-6]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 7
@@ -2596,7 +2518,6 @@ jobs:
     needs: [validate-config, linux-arm64-build-7]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 8
@@ -2618,7 +2539,6 @@ jobs:
     needs: [validate-config, linux-arm64-build-8]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 9
@@ -2640,7 +2560,6 @@ jobs:
     needs: [validate-config, linux-arm64-build-9]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 10
@@ -2662,7 +2581,6 @@ jobs:
     needs: [validate-config, linux-arm64-build-10]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 11
@@ -2684,7 +2602,6 @@ jobs:
     needs: [validate-config, linux-arm64-build-11]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 12
@@ -2706,7 +2623,6 @@ jobs:
     needs: [validate-config, linux-arm64-build-12]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 13
@@ -2728,7 +2644,6 @@ jobs:
     needs: [validate-config, linux-arm64-build-13]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 14
@@ -2750,7 +2665,6 @@ jobs:
     needs: [validate-config, linux-arm64-build-14]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 15
@@ -2772,7 +2686,6 @@ jobs:
     needs: [validate-config, linux-arm64-build-15]
     uses: ./.github/workflows/builder.yml
     with:
-      environment: ${{ inputs.environment }}
       platform: linux
       arch: arm64
       stage: 16
@@ -2805,7 +2718,6 @@ jobs:
     ]
     if: always()
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
     steps:
       - name: Download Linux x64 artifact
         if: ${{ inputs.build_linux_x64 }}
