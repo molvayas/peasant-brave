@@ -3101,119 +3101,58 @@ jobs:
           print("✓ AES-256-GCM encryption complete")
           PYEOF
       
-      - name: Generate checksums for release
+      - name: Determine release tag
+        id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          echo "=== Generating SHA256 checksums ==="
-          cd ./release
+          # Use the Brave version as the base tag (e.g. v1.86.146).
+          # If a release with that tag already exists, append -2, -3, etc.
+          BASE="${{ needs.validate-config.outputs.brave_version }}"
           
-          # Generate SHA256 for all encrypted release archives (.enc files)
-          find . -type f -name "*.enc" | while read -r file; do
-            echo "Generating checksum for: $file"
-            checksum=$(sha256sum "$file" | sed 's|./||')
-            echo "$checksum" > "$file.sha256"
-            echo "Created: $file.sha256"
-            echo "SHA256: $checksum"
-          done
+          # Strip leading 'v' if present, then re-add for consistency
+          BASE="${BASE#v}"
+          TAG="v${BASE}"
           
-          echo ""
-          echo "=== Checksum Summary ==="
-          find . -name "*.sha256" | while read -r checksum_file; do
-            artifact_file="${checksum_file%.sha256}"
-            checksum=$(cat "$checksum_file")
-            filename=$(basename "$artifact_file")
-            echo "$checksum  $filename"
-          done
+          # Check existing releases
+          EXISTING=$(gh release list --limit 100 --json tagName -q '.[].tagName' 2>/dev/null || true)
           
-          echo ""
-          echo "Publishing to GitHub Releases..."
-      
-      - name: Generate build summary
-        id: summary
-        run: |
-          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
-          # 🎉 Brave Browser Build Complete (16-Stage)
-          
-          ## 📦 Build Configuration
-          
-          | Platform | Status | Build Type |
-          |----------|--------|------------|
-          | 🐧 Linux x64 | ${{ inputs.build_linux_x64 && '✅ Built' || '⏭️ Skipped' }} | ${{ inputs.build_type }} |
-          | 🐧 Linux arm64 | ${{ inputs.build_linux_arm64 && '✅ Built' || '⏭️ Skipped' }} | ${{ inputs.build_type }} |
-          | 🍎 macOS x64 | ${{ inputs.build_macos_x64 && '✅ Built' || '⏭️ Skipped' }} | ${{ inputs.build_type }} |
-          | 🍎 macOS arm64 | ${{ inputs.build_macos_arm64 && '✅ Built' || '⏭️ Skipped' }} | ${{ inputs.build_type }} |
-          | 🪟 Windows x64 | ${{ inputs.build_windows_x64 && '✅ Built' || '⏭️ Skipped' }} | ${{ inputs.build_type }} |
-          | 🪟 Windows arm64 | ${{ inputs.build_windows_arm64 && '✅ Built' || '⏭️ Skipped' }} | ${{ inputs.build_type }} |
-          | 🪟 Windows x86 | ${{ inputs.build_windows_x86 && '✅ Built' || '⏭️ Skipped' }} | ${{ inputs.build_type }} |
-            
-          ## 🔐 Security & Verification
-          
-          - **Checksums**: SHA256 generated for all artifacts
-          - **Release Type**: Pre-release (custom rebuild)
-          
-          ## 📊 Release Status
-          
-          - **Publishing**: ${{ inputs.publish_release && '✅ Requested' || '❌ Disabled' }} (ALLOW_PUBLISH_RELEASE variable controls actual publishing)
-          - **Environment**: ${{ inputs.environment && inputs.environment || '⏭️ None selected' }}
-          - **Workflow Run**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-          
-          ---
-          
-          **Build triggered by:** @${{ github.actor }} | **Commit:** `${{ github.sha }}`
-          EOF
-          
-          PLATFORMS=""
-          ${{ inputs.build_linux_x64 }} && PLATFORMS="${PLATFORMS}- Linux x64\n"
-          ${{ inputs.build_linux_arm64 }} && PLATFORMS="${PLATFORMS}- Linux arm64\n"
-          ${{ inputs.build_macos_x64 }} && PLATFORMS="${PLATFORMS}- macOS x64\n"
-          ${{ inputs.build_macos_arm64 }} && PLATFORMS="${PLATFORMS}- macOS arm64\n"
-          ${{ inputs.build_windows_x64 }} && PLATFORMS="${PLATFORMS}- Windows x64\n"
-          ${{ inputs.build_windows_arm64 }} && PLATFORMS="${PLATFORMS}- Windows arm64\n"
-          ${{ inputs.build_windows_x86 }} && PLATFORMS="${PLATFORMS}- Windows x86\n"
-          echo "platforms<<EOF" >> $GITHUB_OUTPUT
-          echo -e "$PLATFORMS" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          if ! echo "$EXISTING" | grep -qx "$TAG"; then
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+            echo "Using tag: $TAG"
+          else
+            SEQ=2
+            while echo "$EXISTING" | grep -qx "${TAG}-${SEQ}"; do
+              SEQ=$((SEQ + 1))
+            done
+            echo "tag=${TAG}-${SEQ}" >> $GITHUB_OUTPUT
+            echo "Using tag: ${TAG}-${SEQ}"
+          fi
       
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ github.run_number }}-${{ github.sha }}
-          name: Brave Browser Build ${{ github.run_number }} (16-Stage)
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: ${{ steps.tag.outputs.tag }}
           body: |
-            ## Brave Browser - Multi-Platform Build (16-Stage Reliability)
+            **Brave**: `${{ needs.validate-config.outputs.brave_version }}`
+            **Build system**: `${{ needs.validate-config.outputs.build_system }}`
+            **Patches (public)**: `${{ needs.validate-config.outputs.patches_public }}`
+            **Patches (private)**: `${{ needs.validate-config.outputs.patches_private }}`
+            **Commit**: `${{ github.sha }}`
+            **Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             
-            **Build**: #${{ github.run_number }}
-            **Commit**: ${{ github.sha }}
-            **Triggered by**: @${{ github.actor }}
-            **Date**: ${{ github.event.repository.updated_at }}
-            **Stages per platform**: 16 (for maximum reliability)
+            ---
             
-            ### Platforms Included:
-            ${{ steps.summary.outputs.platforms }}
+            Artifacts are AES-256-GCM encrypted. Use the [launcher](https://browser.omeglelike.com) to download and run the browser. The launcher keeps it up to date securely and applies the necessary flags on launch. Advanced users can find the decryption key in the launcher/workflow source; non-technical users will benefit from sticking with the launcher.
             
-            ### ⚠️ Encrypted Artifacts
-            
-            Release artifacts are **AES-256-GCM encrypted** (`.enc` files).
-            **This browser is not intended to be downloaded and run manually.**
-            
-            Please use the official launcher instead: https://browser.omeglelike.com
-            
-            The launcher handles downloading, decryption, verification, and installation automatically.
-            If you really need the decryption key, you can find it in the launcher's source code.
-            
-            ### Build Details
-            - **16 stages per platform** for maximum reliability
-            - Each stage runs for ~18-20 minutes
-            - Better checkpoint granularity reduces risk of failures
-            
-            **Note:** This is a custom rebuild with symbol stripping for size/speed optimization.
-          draft: false
+            This is not a general-purpose web browser — for everyday browsing, use [Brave](https://brave.com).
+          draft: true
           prerelease: true
-          fail_on_unmatched_files: true
           files: |
             ./release/**/*.enc
-            ./release/**/*.sha256
       
-      - name: Release published
+      - name: Release created
         run: |
-          echo "✓ Release published successfully!"
-          echo "Check: https://github.com/${{ github.repository }}/releases"
+          echo "✓ Draft release created: ${{ steps.tag.outputs.tag }}"
+          echo "Review and publish at: https://github.com/${{ github.repository }}/releases"

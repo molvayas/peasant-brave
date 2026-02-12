@@ -163,99 +163,62 @@ jobs:
           print("✓ AES-256-GCM encryption complete")
           PYEOF
 
-      - name: Generate checksums for release
+      - name: Determine release tag
+        id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          echo "=== Generating SHA256 checksums ==="
-          cd ./release
-
-          # Generate SHA256 for all encrypted release archives (.enc files)
-          find . -type f -name "*.enc" | while read -r file; do
-            echo "Generating checksum for: $file"
-            checksum=$(sha256sum "$file" | sed 's|./||')
-            echo "$checksum" > "$file.sha256"
-            echo "Created: $file.sha256"
-            echo "SHA256: $checksum"
-          done
-
-          echo ""
-          echo "=== Checksum Summary ==="
-          find . -name "*.sha256" | while read -r checksum_file; do
-            artifact_file="${checksum_file%.sha256}"
-            checksum=$(cat "$checksum_file")
-            filename=$(basename "$artifact_file")
-            echo "$checksum  $filename"
-          done
-
-          echo ""
-          echo "Publishing to GitHub Releases..."
-
-      - name: Detect platforms from artifacts
-        id: platforms
-        run: |
-          cd ./release
-          PLATFORMS=""
-
-          # Detect which platforms were built based on directory names
-          [ -d "linux-x64" ]      && PLATFORMS="${PLATFORMS}- Linux x64\n"
-          [ -d "linux-arm64" ]    && PLATFORMS="${PLATFORMS}- Linux arm64\n"
-          [ -d "macos-x64" ]     && PLATFORMS="${PLATFORMS}- macOS x64\n"
-          [ -d "macos-arm64" ]   && PLATFORMS="${PLATFORMS}- macOS arm64\n"
-          [ -d "windows-x64" ]   && PLATFORMS="${PLATFORMS}- Windows x64\n"
-          [ -d "windows-arm64" ] && PLATFORMS="${PLATFORMS}- Windows arm64\n"
-          [ -d "windows-x86" ]   && PLATFORMS="${PLATFORMS}- Windows x86\n"
-
-          if [ -z "$PLATFORMS" ]; then
-            # Fallback: list top-level dirs
-            PLATFORMS="(auto-detected from artifact contents)\n"
-            for dir in */; do
-              PLATFORMS="${PLATFORMS}- ${dir%/}\n"
-            done
+          # Detect Brave version from artifact filenames (e.g. raven-v1.86.146-linux-x64.enc)
+          VERSION=$(find ./release -type f -name "*.enc" -o -name "*.zip" | head -1 | sed -E 's/.*raven-(v[0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+          
+          if [ -z "$VERSION" ] || [[ ! "$VERSION" =~ ^v[0-9] ]]; then
+            echo "Could not detect version from artifacts, falling back to run number"
+            VERSION="v0.0.0-run${{ github.run_number }}"
           fi
-
-          echo "platforms<<EOF" >> $GITHUB_OUTPUT
-          echo -e "$PLATFORMS" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-          echo "Detected platforms:"
-          echo -e "$PLATFORMS"
-
+          
+          echo "Detected version: $VERSION"
+          TAG="$VERSION"
+          
+          # Check existing releases; append -2, -3, etc. if tag exists
+          EXISTING=$(gh release list --limit 100 --json tagName -q '.[].tagName' 2>/dev/null || true)
+          
+          if ! echo "$EXISTING" | grep -qx "$TAG"; then
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+          else
+            SEQ=2
+            while echo "$EXISTING" | grep -qx "${TAG}-${SEQ}"; do
+              SEQ=$((SEQ + 1))
+            done
+            TAG="${TAG}-${SEQ}"
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Using tag: $TAG"
+      
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ github.run_number }}-${{ github.sha }}
-          name: Brave Browser Build (from run ${{ inputs.source_run_id }})
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: ${{ steps.tag.outputs.tag }}
           body: |
-            ## Brave Browser - Multi-Platform Build
-
-            **Publish run**: #${{ github.run_number }}
-            **Source build run**: ${{ inputs.source_run_id }}
-            **Commit**: ${{ github.sha }}
-            **Triggered by**: @${{ github.actor }}
-            **Date**: ${{ github.event.repository.updated_at }}
-
-            ### Platforms Included:
-            ${{ steps.platforms.outputs.platforms }}
-
-            ### ⚠️ Encrypted Artifacts
-
-            Release artifacts are **AES-256-GCM encrypted** (`.enc` files).
-            **This browser is not intended to be downloaded and run manually.**
-
-            Please use the official launcher instead: https://browser.omeglelike.com
-
-            The launcher handles downloading, decryption, verification, and installation automatically.
-            If you really need the decryption key, you can find it in the launcher's source code.
-
-            **Note:** This is a custom rebuild with symbol stripping for size/speed optimization.
-          draft: false
+            **Brave**: `${{ steps.tag.outputs.version }}`
+            **Commit**: `${{ github.sha }}`
+            **Source build run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ inputs.source_run_id }}
+            **Publish run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            ---
+            
+            Artifacts are AES-256-GCM encrypted. Use the [launcher](https://browser.omeglelike.com) to download and run the browser. The launcher keeps it up to date securely and applies the necessary flags on launch. Advanced users can find the decryption key in the launcher/workflow source; non-technical users will benefit from sticking with the launcher.
+            
+            This is not a general-purpose web browser — for everyday browsing, use [Brave](https://brave.com).
+          draft: true
           prerelease: true
-          fail_on_unmatched_files: true
           files: |
             ./release/**/*.enc
-            ./release/**/*.sha256
-
-      - name: Release published
+      
+      - name: Release created
         run: |
-          echo "✓ Release published successfully!"
+          echo "✓ Draft release created: ${{ steps.tag.outputs.tag }}"
           echo "Source build run: ${{ inputs.source_run_id }}"
-          echo "Check: https://github.com/${{ github.repository }}/releases"
+          echo "Review and publish at: https://github.com/${{ github.repository }}/releases"
