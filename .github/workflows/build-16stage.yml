@@ -3136,10 +3136,10 @@ jobs:
           name: ${{ steps.tag.outputs.tag }}
           body: |
             **Brave**: `${{ needs.validate-config.outputs.brave_version }}`
-            **Build system**: `${{ needs.validate-config.outputs.build_system }}`
-            **Patches (public)**: `${{ needs.validate-config.outputs.patches_public }}`
-            **Patches (private)**: `${{ needs.validate-config.outputs.patches_private }}`
-            **Commit**: `${{ github.sha }}`
+            **Commit**: [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
+            **Build system**: [${{ needs.validate-config.outputs.build_system }}](${{ github.server_url }}/${{ github.repository_owner }}/peasant-build-system/commit/${{ needs.validate-config.outputs.build_system }})
+            **Patches (public)**: [${{ needs.validate-config.outputs.patches_public }}](${{ github.server_url }}/${{ github.repository_owner }}/peasant-patches-mpl/commit/${{ needs.validate-config.outputs.patches_public }})
+            **Patches (private)**: [${{ needs.validate-config.outputs.patches_private }}](${{ github.server_url }}/${{ github.repository_owner }}/peasant-patches-private/commit/${{ needs.validate-config.outputs.patches_private }})
             **Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             
             ---

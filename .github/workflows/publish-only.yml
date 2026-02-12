@@ -203,7 +203,7 @@ jobs:
           name: ${{ steps.tag.outputs.tag }}
           body: |
             **Brave**: `${{ steps.tag.outputs.version }}`
-            **Commit**: `${{ github.sha }}`
+            **Commit**: [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
             **Source build run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ inputs.source_run_id }}
             **Publish run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             
