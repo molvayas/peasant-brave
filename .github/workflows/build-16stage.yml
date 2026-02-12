@@ -306,6 +306,149 @@ jobs:
           echo "  patches_private=$PATCHES_PRIVATE → $PATCHES_PRIVATE_SHA"
           echo ""
           echo "✓ Commits frozen - all stages will use these exact commits"
+          
+          # ── Build plan summary ──────────────────────────────────────
+          # Show exactly which jobs will run vs skip so mis-clicks are
+          # caught immediately instead of after 48+ hours.
+          echo ""
+          echo "=========================================="
+          echo "  BUILD PLAN SUMMARY"
+          echo "=========================================="
+          echo ""
+          
+          TOTAL_PLATFORMS=0
+          TOTAL_STAGES=0
+          
+          if [ "${{ inputs.build_linux_x64 }}" = "true" ]; then
+            echo "  🐧 Linux x64 .......... BUILD (16 stages)"
+            TOTAL_PLATFORMS=$((TOTAL_PLATFORMS + 1))
+            TOTAL_STAGES=$((TOTAL_STAGES + 16))
+          else
+            echo "  🐧 Linux x64 .......... SKIP"
+          fi
+          
+          if [ "${{ inputs.build_linux_arm64 }}" = "true" ]; then
+            echo "  🐧 Linux arm64 ........ BUILD (16 stages)"
+            TOTAL_PLATFORMS=$((TOTAL_PLATFORMS + 1))
+            TOTAL_STAGES=$((TOTAL_STAGES + 16))
+          else
+            echo "  🐧 Linux arm64 ........ SKIP"
+          fi
+          
+          if [ "${{ inputs.build_macos_x64 }}" = "true" ]; then
+            echo "  🍎 macOS x64 .......... BUILD (16 stages)"
+            TOTAL_PLATFORMS=$((TOTAL_PLATFORMS + 1))
+            TOTAL_STAGES=$((TOTAL_STAGES + 16))
+          else
+            echo "  🍎 macOS x64 .......... SKIP"
+          fi
+          
+          if [ "${{ inputs.build_macos_arm64 }}" = "true" ]; then
+            echo "  🍎 macOS arm64 ........ BUILD (16 stages)"
+            TOTAL_PLATFORMS=$((TOTAL_PLATFORMS + 1))
+            TOTAL_STAGES=$((TOTAL_STAGES + 16))
+          else
+            echo "  🍎 macOS arm64 ........ SKIP"
+          fi
+          
+          if [ "${{ inputs.build_windows_x64 }}" = "true" ]; then
+            echo "  🪟 Windows x64 ........ BUILD (16 stages)"
+            TOTAL_PLATFORMS=$((TOTAL_PLATFORMS + 1))
+            TOTAL_STAGES=$((TOTAL_STAGES + 16))
+          else
+            echo "  🪟 Windows x64 ........ SKIP"
+          fi
+          
+          if [ "${{ inputs.build_windows_arm64 }}" = "true" ]; then
+            echo "  🪟 Windows arm64 ...... BUILD (16 stages)"
+            TOTAL_PLATFORMS=$((TOTAL_PLATFORMS + 1))
+            TOTAL_STAGES=$((TOTAL_STAGES + 16))
+          else
+            echo "  🪟 Windows arm64 ...... SKIP"
+          fi
+          
+          if [ "${{ inputs.build_windows_x86 }}" = "true" ]; then
+            echo "  🪟 Windows x86 ........ BUILD (16 stages)"
+            TOTAL_PLATFORMS=$((TOTAL_PLATFORMS + 1))
+            TOTAL_STAGES=$((TOTAL_STAGES + 16))
+          else
+            echo "  🪟 Windows x86 ........ SKIP"
+          fi
+          
+          echo ""
+          echo "------------------------------------------"
+          echo "  Platforms: $TOTAL_PLATFORMS | Stages: $TOTAL_STAGES"
+          echo "------------------------------------------"
+          echo ""
+          
+          # Post-build jobs
+          echo "  📦 Collect artifacts ... $([ $TOTAL_PLATFORMS -gt 0 ] && echo 'WILL RUN (after builds)' || echo 'SKIP (no builds)')"
+          
+          if [ "${{ inputs.publish_release }}" = "true" ] && [ "$ALLOW_RELEASE" = "true" ]; then
+            echo "  🚀 Publish release .... WILL RUN (after collect)"
+            echo "     Environment: ${{ inputs.environment }}"
+          elif [ "${{ inputs.publish_release }}" = "true" ] && [ "$ALLOW_RELEASE" != "true" ]; then
+            echo "  🚀 Publish release .... BLOCKED (environment '${{ inputs.environment }}' does not allow publishing)"
+          else
+            echo "  🚀 Publish release .... SKIP (not requested)"
+          fi
+          
+          echo ""
+          
+          if [ $TOTAL_PLATFORMS -eq 0 ]; then
+            echo "=========================================="
+            echo "  ⚠️  WARNING: No platforms selected!"
+            echo "  Nothing will be built. Is this intended?"
+            echo "=========================================="
+          fi
+          
+          echo ""
+          echo "✓ Validation complete"
+      
+      - name: Build plan summary
+        run: |
+          # Write a GitHub Actions job summary so the plan is visible
+          # on the workflow run page without expanding any job logs.
+          S=$GITHUB_STEP_SUMMARY
+          
+          echo "## 🔍 Build Plan" >> $S
+          echo "" >> $S
+          echo "| Platform | Status | Stages |" >> $S
+          echo "|----------|--------|--------|" >> $S
+          
+          add_row() {
+            local icon="$1" name="$2" enabled="$3"
+            if [ "$enabled" = "true" ]; then
+              echo "| $icon $name | ✅ Build | 16 |" >> $S
+            else
+              echo "| $icon $name | ⏭️ Skip | — |" >> $S
+            fi
+          }
+          
+          add_row "🐧" "Linux x64"     "${{ inputs.build_linux_x64 }}"
+          add_row "🐧" "Linux arm64"   "${{ inputs.build_linux_arm64 }}"
+          add_row "🍎" "macOS x64"     "${{ inputs.build_macos_x64 }}"
+          add_row "🍎" "macOS arm64"   "${{ inputs.build_macos_arm64 }}"
+          add_row "🪟" "Windows x64"   "${{ inputs.build_windows_x64 }}"
+          add_row "🪟" "Windows arm64" "${{ inputs.build_windows_arm64 }}"
+          add_row "🪟" "Windows x86"   "${{ inputs.build_windows_x86 }}"
+          
+          echo "" >> $S
+          
+          # Post-build status
+          ALLOW_RELEASE="${{ steps.validate.outputs.allow_publish_release }}"
+          
+          if [ "${{ inputs.publish_release }}" = "true" ] && [ "$ALLOW_RELEASE" = "true" ]; then
+            echo "**Publish release:** ✅ Will publish after successful builds (environment: \`${{ inputs.environment }}\`)" >> $S
+          elif [ "${{ inputs.publish_release }}" = "true" ] && [ "$ALLOW_RELEASE" != "true" ]; then
+            echo "**Publish release:** ⛔ Requested but BLOCKED — environment \`${{ inputs.environment }}\` does not allow publishing" >> $S
+          else
+            echo "**Publish release:** ⏭️ Not requested (test build)" >> $S
+          fi
+          
+          echo "" >> $S
+          echo "**Brave version:** \`${{ steps.validate.outputs.brave_version }}\`" >> $S
+          echo "**Build system:** \`${{ steps.validate.outputs.build_system }}\`" >> $S
 
   # ============================================================================
   # Linux x64 Build Chain (16 stages)
@@ -2708,6 +2851,7 @@ jobs:
   collect-artifacts:
     name: Collect All Build Artifacts
     needs: [
+      validate-config,
       linux-x64-build-16,
       linux-arm64-build-16,
       macos-x64-build-16,
@@ -2785,7 +2929,7 @@ jobs:
           fi
           echo ""
           echo "✓ All selected builds completed!"
-          if [ "${{ inputs.publish_release }}" == "true" ] && [ "${{ vars.ALLOW_PUBLISH_RELEASE }}" == "true" ]; then
+          if [ "${{ inputs.publish_release }}" == "true" ] && [ "${{ needs.validate-config.outputs.allow_publish_release }}" == "true" ]; then
             echo "✓ Ready for release publishing"
           else
             echo "ℹ️  Test build - artifacts available in workflow run"
@@ -2822,8 +2966,8 @@ jobs:
   
   publish-release:
     name: 📦 Publish Release
-    if: ${{ always() && needs.collect-artifacts.result == 'success' && inputs.publish_release && vars.ALLOW_PUBLISH_RELEASE == 'true' }}
-    needs: collect-artifacts
+    if: ${{ always() && needs.collect-artifacts.result == 'success' && inputs.publish_release && needs.validate-config.outputs.allow_publish_release == 'true' }}
+    needs: [validate-config, collect-artifacts]
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     
