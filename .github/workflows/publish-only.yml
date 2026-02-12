@@ -117,47 +117,51 @@ jobs:
           # non-technical users from accidentally downloading and running the
           # browser outside the launcher. If you need the key, here it is.
           # Use the launcher instead: https://browser.omeglelike.com
-          RELEASE_ENCRYPTION_KEY="8488feb81de4054780571ccacf709a33074b23665b64ec7114301c60ab102b15"
+          #
+          # openssl enc does NOT support AEAD ciphers, so we use Python's
+          # cryptography library which is pre-installed on GitHub runners.
 
-          cd ./release
+          python3 - ./release <<'PYEOF'
+          import sys, os, glob
+          from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
-          # Encrypt each .zip file with AES-256-GCM
-          # Format: [12-byte nonce][ciphertext + 16-byte GCM auth tag]
-          find . -type f -name "*.zip" | while read -r file; do
-            echo "Encrypting: $file"
+          KEY = bytes.fromhex("8488feb81de4054780571ccacf709a33074b23665b64ec7114301c60ab102b15")
+          release_dir = sys.argv[1]
 
-            # Generate a random 12-byte nonce (IV)
-            NONCE=$(openssl rand -hex 12)
-            NONCE_BIN=$(echo -n "$NONCE" | xxd -r -p)
+          zip_files = glob.glob(os.path.join(release_dir, "**", "*.zip"), recursive=True)
+          if not zip_files:
+              print("⚠️  No .zip files found to encrypt")
+              sys.exit(0)
 
-            # Encrypt with AES-256-GCM
-            # openssl outputs ciphertext + 16-byte auth tag
-            openssl enc -aes-256-gcm \
-              -in "$file" \
-              -out "${file}.enc.tmp" \
-              -K "$RELEASE_ENCRYPTION_KEY" \
-              -iv "$NONCE" \
-              -nosalt
+          aesgcm = AESGCM(KEY)
 
-            # Prepend the 12-byte nonce to create final format: [nonce][ciphertext+tag]
-            enc_file="${file%.zip}.enc"
-            printf '%s' "$NONCE_BIN" > "$enc_file"
-            cat "${file}.enc.tmp" >> "$enc_file"
-            rm "${file}.enc.tmp"
+          for zip_path in zip_files:
+              print(f"Encrypting: {zip_path}")
 
-            # Verify the encrypted file was created
-            if [ -f "$enc_file" ]; then
-              orig_size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file")
-              enc_size=$(stat -c%s "$enc_file" 2>/dev/null || stat -f%z "$enc_file")
-              echo "✓ Encrypted: $file ($orig_size bytes) -> $enc_file ($enc_size bytes)"
-              rm "$file"
-            else
-              echo "✗ Failed to encrypt: $file"
-              exit 1
-            fi
-          done
+              with open(zip_path, "rb") as f:
+                  plaintext = f.read()
 
-          echo "✓ AES-256-GCM encryption complete"
+              orig_size = len(plaintext)
+
+              # 12-byte random nonce
+              nonce = os.urandom(12)
+
+              # AES-256-GCM encrypt (returns ciphertext + 16-byte auth tag)
+              ciphertext_and_tag = aesgcm.encrypt(nonce, plaintext, None)
+
+              # Output format: [12-byte nonce][ciphertext + 16-byte GCM tag]
+              enc_path = zip_path.rsplit(".zip", 1)[0] + ".enc"
+              with open(enc_path, "wb") as f:
+                  f.write(nonce)
+                  f.write(ciphertext_and_tag)
+
+              enc_size = os.path.getsize(enc_path)
+              print(f"✓ Encrypted: {zip_path} ({orig_size} bytes) -> {enc_path} ({enc_size} bytes)")
+
+              os.remove(zip_path)
+
+          print("✓ AES-256-GCM encryption complete")
+          PYEOF
 
       - name: Generate checksums for release
         run: |
