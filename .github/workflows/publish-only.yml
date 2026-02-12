@@ -1,0 +1,257 @@
+name: Publish Release (from existing artifact)
+
+# Temporary workflow — publishes a release from an artifact that was
+# already uploaded by a previous build-16stage run.
+#
+# Usage:
+#   1. Go to Actions → "Publish Release (from existing artifact)"
+#   2. Enter the run_id of the build that produced the artifact
+#   3. Optionally select the 'release' environment for approval gates
+#   4. Click "Run workflow"
+#
+# Delete this file once you've confirmed it works.
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: 'Run ID of the build workflow that uploaded brave-browser-all-platforms (e.g. 21829087464)'
+        required: true
+        type: string
+      environment:
+        description: 'Deployment environment (select "release" for approval gate)'
+        required: false
+        type: environment
+
+jobs:
+  publish-release:
+    name: 📦 Publish Release
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Download artifact from source run
+        uses: actions/download-artifact@v4
+        with:
+          name: brave-browser-all-platforms
+          path: ./release
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.source_run_id }}
+
+      - name: Display encrypted contents
+        run: |
+          echo "=== Downloaded Encrypted Artifacts ==="
+          echo "Source run: ${{ inputs.source_run_id }}"
+          echo ""
+          find ./release -type f -exec ls -lh {} \;
+          echo ""
+
+      - name: Decrypt artifacts (GPG - Linux/macOS)
+        env:
+          ARCHIVE_PASSWORD: ${{ secrets.ARCHIVE_PASSWORD }}
+        run: |
+          echo "=== Decrypting GPG-encrypted artifacts ==="
+
+          if [ -z "$ARCHIVE_PASSWORD" ]; then
+            echo "⚠️  ARCHIVE_PASSWORD not set - checking for unencrypted files"
+          else
+            echo "✓ ARCHIVE_PASSWORD is set"
+          fi
+
+          # Find and decrypt all .gpg files (Linux/macOS packages)
+          find ./release -name "*.gpg" | while read -r gpg_file; do
+            echo "Decrypting: $gpg_file"
+            output_file="${gpg_file%.gpg}"
+
+            echo "$ARCHIVE_PASSWORD" | gpg --batch --yes --passphrase-fd 0 --decrypt --output "$output_file" "$gpg_file"
+
+            if [ $? -eq 0 ]; then
+              echo "✓ Decrypted to: $output_file"
+              rm "$gpg_file"
+            else
+              echo "✗ Failed to decrypt: $gpg_file"
+              exit 1
+            fi
+          done
+
+          echo "✓ GPG decryption complete"
+
+      - name: Decrypt artifacts (7z - Windows)
+        env:
+          ARCHIVE_PASSWORD: ${{ secrets.ARCHIVE_PASSWORD }}
+        run: |
+          echo "=== Decrypting 7z-encrypted artifacts ==="
+
+          # Install p7zip for extracting 7z files
+          sudo apt-get update && sudo apt-get install -y p7zip-full
+
+          # Find and decrypt all .7z files (Windows packages)
+          find ./release -name "*.7z" | while read -r sevenzip_file; do
+            echo "Decrypting: $sevenzip_file"
+            output_dir=$(dirname "$sevenzip_file")
+
+            7z x "$sevenzip_file" -o"$output_dir" -p"$ARCHIVE_PASSWORD" -y
+
+            if [ $? -eq 0 ]; then
+              echo "✓ Extracted to: $output_dir"
+              rm "$sevenzip_file"
+            else
+              echo "✗ Failed to decrypt: $sevenzip_file"
+              exit 1
+            fi
+          done
+
+          echo "✓ 7z decryption complete"
+
+      - name: Display decrypted release contents
+        run: |
+          echo "=== Decrypted Release Contents ==="
+          find ./release -type f -exec ls -lh {} \;
+          echo ""
+
+      - name: Encrypt release artifacts (AES-256-GCM)
+        run: |
+          echo "=== Encrypting release artifacts with AES-256-GCM ==="
+
+          # This key is INTENTIONALLY PUBLIC. Its only purpose is to prevent
+          # non-technical users from accidentally downloading and running the
+          # browser outside the launcher. If you need the key, here it is.
+          # Use the launcher instead: https://browser.omeglelike.com
+          RELEASE_ENCRYPTION_KEY="8488feb81de4054780571ccacf709a33074b23665b64ec7114301c60ab102b15"
+
+          cd ./release
+
+          # Encrypt each .zip file with AES-256-GCM
+          # Format: [12-byte nonce][ciphertext + 16-byte GCM auth tag]
+          find . -type f -name "*.zip" | while read -r file; do
+            echo "Encrypting: $file"
+
+            # Generate a random 12-byte nonce (IV)
+            NONCE=$(openssl rand -hex 12)
+            NONCE_BIN=$(echo -n "$NONCE" | xxd -r -p)
+
+            # Encrypt with AES-256-GCM
+            # openssl outputs ciphertext + 16-byte auth tag
+            openssl enc -aes-256-gcm \
+              -in "$file" \
+              -out "${file}.enc.tmp" \
+              -K "$RELEASE_ENCRYPTION_KEY" \
+              -iv "$NONCE" \
+              -nosalt
+
+            # Prepend the 12-byte nonce to create final format: [nonce][ciphertext+tag]
+            enc_file="${file%.zip}.enc"
+            printf '%s' "$NONCE_BIN" > "$enc_file"
+            cat "${file}.enc.tmp" >> "$enc_file"
+            rm "${file}.enc.tmp"
+
+            # Verify the encrypted file was created
+            if [ -f "$enc_file" ]; then
+              orig_size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file")
+              enc_size=$(stat -c%s "$enc_file" 2>/dev/null || stat -f%z "$enc_file")
+              echo "✓ Encrypted: $file ($orig_size bytes) -> $enc_file ($enc_size bytes)"
+              rm "$file"
+            else
+              echo "✗ Failed to encrypt: $file"
+              exit 1
+            fi
+          done
+
+          echo "✓ AES-256-GCM encryption complete"
+
+      - name: Generate checksums for release
+        run: |
+          echo "=== Generating SHA256 checksums ==="
+          cd ./release
+
+          # Generate SHA256 for all encrypted release archives (.enc files)
+          find . -type f -name "*.enc" | while read -r file; do
+            echo "Generating checksum for: $file"
+            checksum=$(sha256sum "$file" | sed 's|./||')
+            echo "$checksum" > "$file.sha256"
+            echo "Created: $file.sha256"
+            echo "SHA256: $checksum"
+          done
+
+          echo ""
+          echo "=== Checksum Summary ==="
+          find . -name "*.sha256" | while read -r checksum_file; do
+            artifact_file="${checksum_file%.sha256}"
+            checksum=$(cat "$checksum_file")
+            filename=$(basename "$artifact_file")
+            echo "$checksum  $filename"
+          done
+
+          echo ""
+          echo "Publishing to GitHub Releases..."
+
+      - name: Detect platforms from artifacts
+        id: platforms
+        run: |
+          cd ./release
+          PLATFORMS=""
+
+          # Detect which platforms were built based on directory names
+          [ -d "linux-x64" ]      && PLATFORMS="${PLATFORMS}- Linux x64\n"
+          [ -d "linux-arm64" ]    && PLATFORMS="${PLATFORMS}- Linux arm64\n"
+          [ -d "macos-x64" ]     && PLATFORMS="${PLATFORMS}- macOS x64\n"
+          [ -d "macos-arm64" ]   && PLATFORMS="${PLATFORMS}- macOS arm64\n"
+          [ -d "windows-x64" ]   && PLATFORMS="${PLATFORMS}- Windows x64\n"
+          [ -d "windows-arm64" ] && PLATFORMS="${PLATFORMS}- Windows arm64\n"
+          [ -d "windows-x86" ]   && PLATFORMS="${PLATFORMS}- Windows x86\n"
+
+          if [ -z "$PLATFORMS" ]; then
+            # Fallback: list top-level dirs
+            PLATFORMS="(auto-detected from artifact contents)\n"
+            for dir in */; do
+              PLATFORMS="${PLATFORMS}- ${dir%/}\n"
+            done
+          fi
+
+          echo "platforms<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$PLATFORMS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "Detected platforms:"
+          echo -e "$PLATFORMS"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}-${{ github.sha }}
+          name: Brave Browser Build (from run ${{ inputs.source_run_id }})
+          body: |
+            ## Brave Browser - Multi-Platform Build
+
+            **Publish run**: #${{ github.run_number }}
+            **Source build run**: ${{ inputs.source_run_id }}
+            **Commit**: ${{ github.sha }}
+            **Triggered by**: @${{ github.actor }}
+            **Date**: ${{ github.event.repository.updated_at }}
+
+            ### Platforms Included:
+            ${{ steps.platforms.outputs.platforms }}
+
+            ### ⚠️ Encrypted Artifacts
+
+            Release artifacts are **AES-256-GCM encrypted** (`.enc` files).
+            **This browser is not intended to be downloaded and run manually.**
+
+            Please use the official launcher instead: https://browser.omeglelike.com
+
+            The launcher handles downloading, decryption, verification, and installation automatically.
+            If you really need the decryption key, you can find it in the launcher's source code.
+
+            **Note:** This is a custom rebuild with symbol stripping for size/speed optimization.
+          draft: false
+          prerelease: true
+          fail_on_unmatched_files: true
+          files: |
+            ./release/**/*.enc
+            ./release/**/*.sha256
+
+      - name: Release published
+        run: |
+          echo "✓ Release published successfully!"
+          echo "Source build run: ${{ inputs.source_run_id }}"
+          echo "Check: https://github.com/${{ github.repository }}/releases"
