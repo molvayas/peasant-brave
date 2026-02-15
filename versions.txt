@@ -6,11 +6,7 @@
 #   - Commit hashes: a1b2c3d4e5f6 (short or full SHA)
 # Empty or missing values use the default branch (main/master)
 
-brave_version=v1.87.186
-build_system=main
-patches_public=main
-patches_private=main
-
-
-
-
+brave_version=v1.87.188
+build_system=40a63042ccab13f5188a9171e779a97cb806737b
+patches_public=1b9003c8a28835e2520b5fdde865cc139e9e7bc1
+patches_private=e4e0ad4004b41551dad2349ad312bfa2ea085555
